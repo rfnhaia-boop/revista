@@ -64,7 +64,7 @@ export default function CadernoHome({ signedIn, initialTab }: { signedIn: boolea
         <Feather size={36} />
         <h1>Crie seu perfil para abrir o Caderno.</h1>
         <p>Escolha um nome e um endereço público. Leva menos de um minuto, e depois você já pode escrever.</p>
-        <Link className="primary" href="/pessoas?perfil=1">Criar meu perfil</Link>
+        <Link className="primary" href="/perfil">Criar meu perfil</Link>
       </div>
     );
 
@@ -87,7 +87,7 @@ export default function CadernoHome({ signedIn, initialTab }: { signedIn: boolea
           </div>
         </div>
         <div className="ch-head-actions">
-          <Link className="outline small" href="/pessoas?perfil=1"><Users size={14} /> Editar perfil</Link>
+          <Link className="outline small" href="/perfil"><Users size={14} /> Editar perfil</Link>
           <Link className="primary" href="/escrever/pensamento"><Plus size={16} /> Escrever pensamento</Link>
         </div>
       </header>

@@ -10,7 +10,7 @@ export default async function Page() {
   const user = await getCurrentUser();
   if (!user) redirect("/entrar?return_to=%2Fescrever%2Fpensamento");
   const profile = await database().prepare("SELECT id FROM profiles WHERE owner_id=?").bind(user.userId).first();
-  if (!profile) redirect("/caderno?perfil=1");
+  if (!profile) redirect("/perfil?voltar=escrever");
   return (
     <ThoughtEditor
       initial={{ id: crypto.randomUUID(), title: "", body: "", format: "Pensamento", area: "Filosofia", status: "draft", isNew: true }}
