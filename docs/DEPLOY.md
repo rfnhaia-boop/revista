@@ -14,7 +14,7 @@ Decididas em 14/10/2026: Cofre na mesma VPS com o cofre pessoal trancado; admin 
 
 ## 1. Antes de tocar no servidor
 - [ ] Registros DNS `revista` e `cofre` → `72.62.107.199`.
-- [ ] Conferir portas livres na VPS (`ss -ltnp`). Ocupadas: 22, 80, 443, 3000–3030, 5020, 5678, 8000, 8001, 8010. Proposta: Revista **3040**, Cofre **3050**.
+- [ ] Conferir portas livres na VPS (`ss -ltnp`). Ocupadas (conferido na VPS em 14/10): 3001, 3005, 3010, 3015, 3020, 3021, 3030, 3040, 5020, 5099, 5432, 5678, 8000, 8001, 8010. Escolhidas: Revista **3050**, Cofre **3051**.
 - [ ] Gerar segredos novos (nunca reaproveitar os de dev):
   - `APP_SECRET_REVISTA` (igual nos dois lados: Cofre e Revista)
   - senha do Postgres da Revista e do Cofre
@@ -35,8 +35,8 @@ Decididas em 14/10/2026: Cofre na mesma VPS com o cofre pessoal trancado; admin 
    # DEV_FAKE_USER NÃO definir
    ```
 4. `npm ci && npm run db:migrate && npm run build`.
-5. PM2: app `revista` em `127.0.0.1:3040` (`next start -p 3040`), `pm2 save`.
-6. nginx: `revista.newflowsys.cloud` → `127.0.0.1:3040`, com
+5. PM2: app `revista` em `127.0.0.1:3050` (`next start -p 3050`), `pm2 save`.
+6. nginx: `revista.newflowsys.cloud` → `127.0.0.1:3050`, com
    `proxy_set_header X-Forwarded-For $remote_addr;` (o limitador de abuso confia nesse cabeçalho),
    `client_max_body_size 1m;` e cabeçalhos de segurança (HSTS, `X-Content-Type-Options`, `Referrer-Policy`).
 7. `certbot --nginx -d revista.newflowsys.cloud` (renovação automática).
@@ -46,7 +46,7 @@ Decididas em 14/10/2026: Cofre na mesma VPS com o cofre pessoal trancado; admin 
 2. Código em `/opt/cofre` (hoje **não é repositório git**: criar um, privado, antes de subir).
 3. `.env` de produção com `APP_SECRET_REVISTA`, `ENCRYPTION_KEY`, senha mestra e `DATABASE_URL`.
 4. `npx prisma migrate deploy` (aplica `20261013000000_app_revista` e as anteriores) e `npm run build`.
-5. PM2 `cofre` em `127.0.0.1:3050`; nginx + certbot em `cofre.newflowsys.cloud`, com as rotas do cofre pessoal restritas (ver decisão 1).
+5. PM2 `cofre` em `127.0.0.1:3051`; nginx + certbot em `cofre.newflowsys.cloud`, com as rotas do cofre pessoal restritas (ver decisão 1).
 
 ## 4. Segurança antes de abrir
 - [ ] `DEV_FAKE_USER` ausente e `NODE_ENV=production` (cookie `Secure`, `HttpOnly`, `SameSite=Lax`).
