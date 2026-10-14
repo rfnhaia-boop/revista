@@ -88,6 +88,7 @@ export default function CadernoHome({ signedIn, initialTab }: { signedIn: boolea
         </div>
         <div className="ch-head-actions">
           <Link className="outline small" href="/perfil"><Users size={14} /> Editar perfil</Link>
+          <Link className="outline" href="/escrever"><Plus size={16} /> Escrever artigo</Link>
           <Link className="primary" href="/escrever/pensamento"><Plus size={16} /> Escrever pensamento</Link>
         </div>
       </header>
@@ -254,7 +255,7 @@ function Overview({ mine, newReplies, drafts, slug, tick, go }: { mine: Entry[];
   );
 }
 
-function Texts({ mine }: { mine: Entry[] }) {
+function Thoughts({ mine }: { mine: Entry[] }) {
   const [f, setF] = useState<Filter>("todos");
   const count = (s: string) => mine.filter((p) => p.status === s).length;
   const list = mine.filter((p) => f === "todos" || p.status === f).sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
@@ -306,6 +307,83 @@ function Texts({ mine }: { mine: Entry[] }) {
         </ul>
       )}
     </div>
+  );
+}
+
+type MyArticle = { id: string; slug: string; title: string; status: string; reviewNote: string; updatedAt: string; submittedAt: string | null };
+const ART_STATUS: Record<string, string> = {
+  draft: "Rascunho",
+  submitted: "Enviado",
+  reviewing: "Em revisão",
+  changes_requested: "Ajustes pedidos",
+  rejected: "Recusado",
+  published: "Publicado",
+};
+
+function Texts({ mine }: { mine: Entry[] }) {
+  const [kind, setKind] = useState<"pensamentos" | "artigos">("pensamentos");
+  const [arts, setArts] = useState<MyArticle[] | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/articles")
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d: { items: MyArticle[] }) => alive && setArts(d.items))
+      .catch(() => alive && setArts([]));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const needsYou = (arts ?? []).filter((a) => a.status === "changes_requested").length;
+  return (
+    <div className="ch-stack">
+      <div className="ch-kindbar">
+        <div className="ch-seg" role="group" aria-label="Tipo de texto">
+          <button className={kind === "pensamentos" ? "on" : ""} aria-pressed={kind === "pensamentos"} onClick={() => setKind("pensamentos")}>Pensamentos {mine.length}</button>
+          <button className={kind === "artigos" ? "on" : ""} aria-pressed={kind === "artigos"} onClick={() => setKind("artigos")}>
+            Artigos {arts?.length ?? ""}{needsYou > 0 && <i className="ch-dot">{needsYou}</i>}
+          </button>
+        </div>
+        <Link className="outline small" href={kind === "artigos" ? "/escrever" : "/escrever/pensamento"}>
+          <Plus size={14} /> {kind === "artigos" ? "Novo artigo" : "Novo pensamento"}
+        </Link>
+      </div>
+      {kind === "pensamentos" ? <Thoughts mine={mine} /> : <MyArticles arts={arts} />}
+    </div>
+  );
+}
+
+function MyArticles({ arts }: { arts: MyArticle[] | null }) {
+  if (arts === null) return <p className="dash-muted" role="status">Carregando…</p>;
+  if (arts.length === 0)
+    return (
+      <section className="glass ch-empty ch-card">
+        <PenLine size={30} />
+        <h3>Escreva seu primeiro artigo.</h3>
+        <p>Um texto completo, com título, resumo e referências. Você escreve, envia para a equipe revisar e, se aprovado, ele é publicado com o seu nome. Pode enviar quantos quiser.</p>
+        <Link className="primary" href="/escrever"><Plus size={16} /> Escrever artigo</Link>
+      </section>
+    );
+  return (
+    <ul className="ch-rows">
+      {arts.map((a) => {
+        const editable = a.status === "draft" || a.status === "changes_requested";
+        return (
+          <li key={a.id} className="ch-row glass">
+            <Link href={editable ? `/escrever/${a.id}` : `/revista/${a.slug}`} className="ch-row-main">
+              <span className={`ch-pill art-${a.status}`}>{ART_STATUS[a.status] ?? a.status}</span>
+              <strong>{a.title || "Sem título"}</strong>
+              <small>atualizado em {when(a.updatedAt)}{a.submittedAt ? ` · enviado em ${when(a.submittedAt)}` : ""}</small>
+              {a.status === "changes_requested" && a.reviewNote && <span className="ch-note">Equipe: {a.reviewNote}</span>}
+            </Link>
+            {editable ? (
+              <Link className="primary small" href={`/escrever/${a.id}`}><PenLine size={14} /> {a.status === "draft" ? "Continuar" : "Ajustar"}</Link>
+            ) : (
+              <Link className="outline small" href={`/revista/${a.slug}`}>{a.status === "published" ? "Ler" : "Ver andamento"}</Link>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

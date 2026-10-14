@@ -2,12 +2,13 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ExternalLink, MapPin, PenLine } from "lucide-react";
 import "@/components/community/comunidade.css";
-import ThoughtCard, { Avatar } from "@/components/community/thought-card";
+import { Avatar } from "@/components/community/thought-card";
+import ProfileContent from "@/components/community/profile-content";
 import { FollowButton } from "@/components/community/relation-buttons";
 import ShareButton from "@/components/community/share-button";
 import { NotAvailableView } from "@/components/site/unavailable";
 import { getCurrentUser } from "@/lib/auth";
-import { getProfile, listFeed, userRelations } from "@/lib/community-data";
+import { getProfile, listArticles, listFeed, userRelations } from "@/lib/community-data";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -29,15 +30,16 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const profile = await getProfile(slug, uid);
   if (!profile)
     return <NotAvailableView signedIn={!!user} title="Esse perfil não existe" text="O endereço pode estar incompleto ou a pessoa pode ter mudado o endereço do perfil." />;
-  const [posts, rel] = await Promise.all([listFeed({ authorSlug: slug }), userRelations(uid)]);
-  const saved = new Set(rel.bookmarks);
+  const [posts, articles, rel] = await Promise.all([listFeed({ authorSlug: slug }), listArticles({ authorSlug: slug }), userRelations(uid)]);
   const link = profile.link ? profile.link.replace(/^https:\/\//, "").replace(/\/$/, "") : "";
 
   return (
     <div className="pp">
       <div className="pp-cover" aria-hidden="true" />
       <header className="pp-head">
-        <Avatar name={profile.name} size={104} />
+        <div className="pp-avatar-wrap">
+          <Avatar name={profile.name} size={112} />
+        </div>
         <div className="pp-id">
           <div className="eyebrow">AUTOR INDEPENDENTE</div>
           <h1>{profile.name}</h1>
@@ -50,8 +52,6 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                 <a href={profile.link} target="_blank" rel="noopener noreferrer nofollow ugc">{link}</a>
               </li>
             )}
-            <li><b>{profile.posts}</b> {profile.posts === 1 ? "publicação" : "publicações"}</li>
-            <li><b>{profile.followers}</b> {profile.followers === 1 ? "seguidor" : "seguidores"}</li>
           </ul>
         </div>
         <div className="pp-actions">
@@ -67,6 +67,12 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         </div>
       </header>
 
+      <div className="pp-stats" role="list">
+        <div role="listitem"><strong>{articles.length}</strong><span>{articles.length === 1 ? "artigo" : "artigos"}</span></div>
+        <div role="listitem"><strong>{posts.length}</strong><span>{posts.length === 1 ? "pensamento" : "pensamentos"}</span></div>
+        <div role="listitem"><strong>{profile.followers}</strong><span>{profile.followers === 1 ? "seguidor" : "seguidores"}</span></div>
+      </div>
+
       {profile.interests.length > 0 && (
         <div className="cm-tags pp-tags">
           {profile.interests.map((i) => <span key={i}>{i}</span>)}
@@ -74,22 +80,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       )}
 
       <div className="pp-layout">
-        <section aria-label="Publicações">
-          <h2 className="pp-h">Publicações</h2>
-          {posts.length === 0 ? (
-            <div className="cm-empty">
-              <h3>{profile.isMine ? "Você ainda não publicou nada." : "Ainda não há publicações."}</h3>
-              <p>{profile.isMine ? "Escreva seu primeiro pensamento e ele aparece aqui." : "Volte em breve ou siga para ser avisado."}</p>
-              {profile.isMine && <Link className="primary" href="/escrever/pensamento">Escrever pensamento</Link>}
-            </div>
-          ) : (
-            <div className="cm-feed">
-              {posts.map((p) => (
-                <ThoughtCard key={p.id} post={p} saved={saved.has(p.id)} signedIn={!!user} showAuthor={false} />
-              ))}
-            </div>
-          )}
-        </section>
+        <ProfileContent posts={posts} articles={articles} saved={rel.bookmarks} signedIn={!!user} isMine={profile.isMine} />
 
         <aside className="pp-aside">
           <div className="cm-box">
@@ -102,7 +93,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
               <p className="pp-text">{profile.trajectory}</p>
             </div>
           )}
-          <p className="pp-note">Conteúdo independente. Os textos deste perfil não recebem avaliação ou selo da NEW.</p>
+          <p className="pp-note">Conteúdo independente. Os textos deste perfil não recebem avaliação ou selo da NEW, exceto onde a revisão editorial estiver indicada.</p>
         </aside>
       </div>
     </div>

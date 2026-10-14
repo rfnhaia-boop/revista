@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const db = database();
     const authors = await db
       .prepare(
-        "SELECT p.id,p.slug,p.name,p.headline,p.location,p.bio,p.trajectory,p.interests,p.link,p.show_supporters AS showSupporters,(SELECT COUNT(*) FROM follows f WHERE f.profile_id=p.id) AS followers,(SELECT COUNT(*) FROM notebooks n WHERE n.profile_id=p.id AND n.status=?) AS postCount,p.owner_id=? AS isMine FROM profiles p ORDER BY (p.slug=? OR p.owner_id=?) DESC,p.created_at DESC LIMIT 100",
+        "SELECT p.id,p.slug,p.name,p.headline,p.location,p.bio,p.trajectory,p.interests,p.link,p.show_supporters AS showSupporters,(SELECT COUNT(*) FROM follows f WHERE f.profile_id=p.id) AS followers,((SELECT COUNT(*) FROM notebooks n WHERE n.profile_id=p.id AND n.status=?)+(SELECT COUNT(*) FROM articles a WHERE a.author_id=p.owner_id AND a.status='published')) AS postCount,p.owner_id=? AS isMine FROM profiles p ORDER BY (p.slug=? OR p.owner_id=?) DESC,p.created_at DESC LIMIT 100",
       )
       .bind("published", uid, authorSlug, uid)
       .all();

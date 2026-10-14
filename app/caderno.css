@@ -117,3 +117,14 @@
   .ch-tile strong { font-size: 30px; }
   .ch-delta small { display: none; }
 }
+
+.ch-kindbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.ch-pill.art-submitted, .ch-pill.art-reviewing { background: #6a9bff1f; color: #9fc0ff; }
+.ch-pill.art-changes_requested { background: #f2c14e1f; color: #f2c14e; }
+.ch-pill.art-rejected { background: #ffb4c01f; color: #ffb4c0; }
+.ch-pill.art-published { background: #8fe6b41f; color: #8fe6b4; }
+.ch-pill.art-draft { background: #ffffff10; color: #b9afc8; }
+.ch-note { margin-top: 4px; font-size: 13px; line-height: 1.5; color: #ffe3a3; }
+.ch-head-actions { flex-wrap: wrap; }
+
+.ch-seg .ch-dot { margin-left: 7px; }

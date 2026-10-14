@@ -26,6 +26,7 @@ export type PersonCard = {
   link: string;
   followers: number;
   posts: number;
+  articles: number;
 };
 
 export type PersonFull = PersonCard & { trajectory: string; isMine: boolean };
@@ -59,12 +60,13 @@ type ProfileRow = Omit<PersonCard, "interests"> & { interests: string };
 
 const PROFILE_COLS = `p.id,p.slug,p.name,p.headline,p.location,p.bio,p.interests,p.link,
   (SELECT COUNT(*)::int FROM follows f WHERE f.profile_id=p.id) AS followers,
-  (SELECT COUNT(*)::int FROM notebooks n WHERE n.profile_id=p.id AND n.status='published') AS posts`;
+  (SELECT COUNT(*)::int FROM notebooks n WHERE n.profile_id=p.id AND n.status='published') AS posts,
+  (SELECT COUNT(*)::int FROM articles a WHERE a.author_id=p.owner_id AND a.status='published') AS articles`;
 
 /** Autores, com quem já publicou primeiro. */
 export async function listProfiles(limit = 100): Promise<PersonCard[]> {
   const r = await database()
-    .prepare(`SELECT ${PROFILE_COLS} FROM profiles p ORDER BY posts DESC, p.created_at DESC LIMIT ${Math.min(limit, 200)}`)
+    .prepare(`SELECT * FROM (SELECT ${PROFILE_COLS},p.created_at AS created FROM profiles p) t ORDER BY (t.posts + t.articles) DESC, t.created DESC LIMIT ${Math.min(limit, 200)}`)
     .all<ProfileRow>();
   return r.results.map((p) => ({ ...p, interests: splitInterests(p.interests) }));
 }
@@ -94,4 +96,38 @@ export async function myProfileId(uid: string): Promise<string> {
   if (!uid) return "";
   const r = await database().prepare("SELECT id FROM profiles WHERE owner_id=?").bind(uid).first<{ id: string }>();
   return r?.id ?? "";
+}
+
+export type FeedArticle = {
+  slug: string;
+  title: string;
+  summary: string;
+  area: string;
+  type: string;
+  authorName: string;
+  authorSlug: string | null;
+  minutes: number;
+  publishedAt: string;
+};
+
+/** Artigos publicados (revisados pela equipe), opcionalmente só de um autor. */
+export async function listArticles(opts: { authorSlug?: string; limit?: number } = {}): Promise<FeedArticle[]> {
+  const params: unknown[] = ["published"];
+  let where = "a.status=?";
+  if (opts.authorSlug) {
+    where += " AND p.slug=?";
+    params.push(opts.authorSlug);
+  }
+  try {
+    const r = await database()
+      .prepare(
+        `SELECT a.slug,a.title,a.summary,a.area,a.kind AS type,a.author_name AS authorName,a.reading_minutes AS minutes,a.published_at AS publishedAt,p.slug AS authorSlug
+         FROM articles a LEFT JOIN profiles p ON p.owner_id=a.author_id WHERE ${where} ORDER BY a.published_at DESC LIMIT ${Math.min(opts.limit ?? 100, 200)}`,
+      )
+      .bind(...params)
+      .all<FeedArticle>();
+    return r.results;
+  } catch {
+    return [];
+  }
 }

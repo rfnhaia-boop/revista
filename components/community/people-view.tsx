@@ -73,7 +73,7 @@ export default function PeopleView({ people, following, signedIn, myId }: { peop
                 </div>
               )}
               <div className="cm-pfoot">
-                <span>{p.posts} {p.posts === 1 ? "publicação" : "publicações"} · {p.followers} {p.followers === 1 ? "seguidor" : "seguidores"}</span>
+                <span>{p.articles} {p.articles === 1 ? "artigo" : "artigos"} · {p.posts} {p.posts === 1 ? "pensamento" : "pensamentos"} · {p.followers} {p.followers === 1 ? "seguidor" : "seguidores"}</span>
                 {p.id === myId ? <Link href="/caderno" className="outline small">Meu Caderno</Link> : <FollowButton profileId={p.id} following={followSet.has(p.id)} signedIn={signedIn} size="sm" />}
               </div>
             </article>

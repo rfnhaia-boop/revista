@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ArrowLeft, Check, Loader2 } from "lucide-react";
 import RichEditor from "./rich-editor";
+import Markdown from "./markdown";
 import { ARTICLE_AREAS, ARTICLE_KINDS, MIN_BODY_CHARS } from "@/lib/author-validation";
 
 export type EditableArticle = {
@@ -28,6 +29,7 @@ export default function ArticleEditor({ initial, readOnlyReason }: { initial: Ed
   const [save, setSave] = useState<Save>("idle");
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [preview, setPreview] = useState(false);
   const readOnly = !!readOnlyReason;
   const titleRef = useRef<HTMLTextAreaElement>(null);
 
@@ -159,6 +161,9 @@ export default function ArticleEditor({ initial, readOnlyReason }: { initial: Ed
           {save === "saving" ? <Loader2 size={14} className="spin" /> : save === "saved" ? <Check size={14} /> : null} {statusText}
         </span>
         <span className="writer-spacer" />
+        <button className="writer-btn" onClick={() => { setPreview((v) => !v); window.scrollTo({ top: 0 }); }} aria-pressed={preview}>
+          {preview ? "Voltar a editar" : "Pré-visualizar"}
+        </button>
         {!readOnly && (
           <>
             <button className="writer-btn" onClick={() => void saveNow()} disabled={submitting}>Salvar rascunho</button>
@@ -169,7 +174,7 @@ export default function ArticleEditor({ initial, readOnlyReason }: { initial: Ed
         )}
       </header>
 
-      <main className="writer-page">
+      <main className={"writer-page" + (preview ? " is-preview" : "")}>
         {readOnlyReason && <div className="writer-banner info">{readOnlyReason}</div>}
         {a.status === "changes_requested" && a.reviewNote && (
           <div className="writer-banner warn">
@@ -177,6 +182,28 @@ export default function ArticleEditor({ initial, readOnlyReason }: { initial: Ed
           </div>
         )}
 
+        {preview && (
+          <article className="ap-preview">
+            <div className="writer-banner info">Pré-visualização: é assim que o artigo aparece depois de aprovado e publicado. Nada foi enviado.</div>
+            <div className="eyebrow">{(a.area || "ÁREA").toUpperCase()} · {a.kind.toUpperCase()}</div>
+            <h1>{a.title.trim() || "Sem título"}</h1>
+            {a.summary.trim() && <p className="article-deck">{a.summary}</p>}
+            <div className="article-byline">
+              <span>{a.authorName || "Autoria"}</span>
+              <span>{a.kind}</span>
+              <span>{minutes} min de leitura</span>
+            </div>
+            <div className="reading article-reading">
+              {a.body.trim() ? <Markdown>{a.body}</Markdown> : <p className="hint">O texto do artigo ainda está vazio.</p>}
+            </div>
+            {a.referencesText.trim() && (
+              <div className="reading article-reading">
+                <h3>Referências</h3>
+                <p>{a.referencesText}</p>
+              </div>
+            )}
+          </article>
+        )}
         <textarea
           ref={titleRef}
           className="writer-title"
