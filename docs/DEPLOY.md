@@ -1,6 +1,6 @@
 # Plano de deploy — Revista NEW (Módulo 6)
 
-## Status (14/10/2026)
+## Status (atualizado em 14/10/2026 — NO AR)
 
 | Item | Estado |
 |---|---|
@@ -9,9 +9,9 @@
 | Bancos `revista` e `cofre` no Postgres local | criados, migrados |
 | Backup diário 03:00 em `/opt/backups` (14 dias) + restauração testada | feito |
 | Teste de fumaça no servidor (cadastro → código → ativar → sessão → /admin 404) | **passou** |
-| DNS `revista` e `cofre` → 72.62.107.199 | **pendente (Rafael)** |
-| SSL (certbot) nos dois domínios | pendente do DNS |
-| Primeiro login do admin (`new.company.sys@gmail.com`) | pendente do SSL |
+| DNS `revista` e `cofre` → 72.62.107.199 | **feito** (registros A criados na Hostinger) |
+| SSL (Let's Encrypt, um certificado para os dois, renova sozinho; expira 12/01/2027) + HSTS + redirect http→https | **feito** |
+| Primeiro login do admin (`new.company.sys@gmail.com`): cadastro em https://cofre.newflowsys.cloud/cadastro → código → https://revista.newflowsys.cloud/entrar | **pendente (Rafael)** |
 
 Detalhes que diferem do plano original: `COFRE_URL` da Revista aponta para `http://127.0.0.1:3051` (a ativação não passa pela internet) e o nginx do Cofre devolve 404 para `/cofre`, `/login`, `/api/auth`, `/api/sistemas` e `/api/integracao`. No servidor foi usado `npm install` (o `npm ci` do npm 10 recusa o lock gerado no Windows).
 
