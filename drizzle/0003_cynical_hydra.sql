@@ -1,0 +1,1 @@
+ALTER TABLE "submissions" ADD COLUMN "review_note" text DEFAULT '' NOT NULL;

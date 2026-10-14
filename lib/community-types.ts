@@ -1,0 +1,3 @@
+export type Author={id:string;slug:string;name:string;headline?:string;location?:string;bio:string;trajectory?:string;interests:string;link:string;showSupporters?:boolean;followers:number;postCount:number;isMine:boolean;demo?:boolean};
+export type Entry={id:string;profileId:string;title:string;excerpt:string;body:string|null;format:string;area:string;access:'free'|'paid';priceCents:number;status:string;createdAt:string;updatedAt:string;name:string;slug:string;isMine:boolean;likes?:number;replies?:number;readers?:number|null;newReplies?:number;demo?:boolean};
+export type Community={profiles:Author[];posts:Entry[];following:string[];bookmarks:string[];myProfile:Author|null};

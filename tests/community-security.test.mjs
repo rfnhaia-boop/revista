@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {postSchema,profileSchema,relationSchema} from '../lib/community-validation.ts';
+const post={action:'post',id:crypto.randomUUID(),title:'Uma publicação autoral',excerpt:'Apresentação pública de uma ideia independente.',body:'Este conteúdo pertence ao autor e ainda não recebeu avaliação editorial ou científica.',format:'Pensamento',area:'Filosofia',access:'free',priceCents:0,status:'published',consent:true};
+assert.equal(postSchema.safeParse(post).success,true);
+assert.equal(postSchema.safeParse({...post,access:'paid',priceCents:1900}).success,true);
+for(const patch of [{access:'paid',priceCents:0},{access:'free',priceCents:100},{priceCents:1.5},{status:'approved'},{ownerId:'other'},{seal:'NEW'},{consent:false},{body:'too short'}])assert.equal(postSchema.safeParse({...post,...patch}).success,false);
+const profile={action:'profile',name:'Autor teste',slug:'autor-teste',headline:'Pesquisador independente',location:'Jundiaí, SP',bio:'Um perfil de testes sobre livros e filosofia.',trajectory:'Uma trajetória intelectual em construção.',interests:'Filosofia',link:'https://example.com',showSupporters:false,consent:true};
+assert.equal(profileSchema.safeParse(profile).success,true);
+for(const patch of [{link:'javascript:alert(1)'},{link:'http://example.com'},{slug:'../../admin'},{role:'editor'},{consent:false}])assert.equal(profileSchema.safeParse({...profile,...patch}).success,false);
+assert.equal(relationSchema.safeParse({action:'follow',targetId:crypto.randomUUID(),enabled:true}).success,true);
+assert.equal(relationSchema.safeParse({action:'follow',targetId:crypto.randomUUID(),enabled:true,ownerId:'other'}).success,false);
+console.log('Community schemas: free/paid rules, HTTPS links, consent and rejection of privilege fields passed.');

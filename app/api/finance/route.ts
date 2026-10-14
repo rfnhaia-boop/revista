@@ -1,0 +1,1 @@
+export async function POST(){return Response.json({error:'Pagamentos reais ainda não estão habilitados. Nenhuma cobrança ou transferência foi realizada.'},{status:503,headers:{'Cache-Control':'no-store'}});}

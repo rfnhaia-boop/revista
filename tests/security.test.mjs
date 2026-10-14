@@ -1,0 +1,14 @@
+process.env.APP_ORIGIN='https://revista.test';
+import assert from 'node:assert/strict';
+import {submissionSchema,validOrigin} from '../lib/validation.ts';
+const valid={id:crypto.randomUUID(),kind:'article',title:'Uma pergunta científica',author:'Autor de teste',area:'Educação',summary:'Uma proposta de estudo com informações suficientes sobre a pergunta de pesquisa e sua relevância.',methodology:'Um protocolo prévio e uma revisão de literatura com critérios explícitos.',references:'',budgetCents:10000,consent:true};
+assert.equal(submissionSchema.safeParse(valid).success,true);
+for(const patch of [{budgetCents:-1},{budgetCents:1.5},{consent:false},{status:'approved'},{ownerId:'other-user'},{summary:'curto'},{kind:'payment'},{id:'invalid'}])assert.equal(submissionSchema.safeParse({...valid,...patch}).success,false);
+assert.equal(validOrigin(new Request('https://revista.test/api/submissions',{headers:{origin:'https://revista.test'}})),true);
+assert.equal(validOrigin(new Request('https://revista.test/api/submissions',{headers:{origin:'https://attacker.example'}})),false);
+assert.equal(validOrigin(new Request('https://revista.test/api/submissions')),false);
+console.log('Security validation: valid input accepted, privilege fields and invalid money rejected, cross-origin writes denied.');
+assert.equal(submissionSchema.safeParse({...valid,kind:'book'}).success,true);
+assert.equal(submissionSchema.safeParse({...valid,kind:'new-project'}).success,true);
+assert.equal(submissionSchema.safeParse({...valid,kind:'book',status:'published'}).success,false);
+console.log('Book and NEW project submissions accepted; automatic publication fields rejected.');

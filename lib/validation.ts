@@ -1,0 +1,3 @@
+import { z } from 'zod';
+export const submissionSchema=z.object({id:z.string().uuid(),kind:z.enum(['book','new-project','article','project','question','application']),title:z.string().trim().min(8).max(180),area:z.enum(['Psicologia','Tecnologia','Educação','Sociedade','Filosofia','Negócios']),author:z.string().trim().min(2).max(120),summary:z.string().trim().min(60).max(12000),methodology:z.string().trim().min(30).max(12000),references:z.string().trim().max(8000),budgetCents:z.number().int().min(0).max(100000000),consent:z.literal(true)}).strict();
+export function validOrigin(request:Request){const origin=request.headers.get("origin");const allowed=process.env.APP_ORIGIN;return !!origin&&!!allowed&&origin===allowed;}

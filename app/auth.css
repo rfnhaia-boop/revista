@@ -1,0 +1,52 @@
+.auth-split { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); background: #0a0710; }
+
+.auth-art { position: relative; overflow: hidden; min-height: 100vh; }
+.auth-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 40% 50%; }
+.auth-art-shade { position: absolute; inset: 0; background: linear-gradient(90deg, #0a071000 55%, #0a0710 100%), linear-gradient(0deg, #0a0710cc 0%, #0a071000 55%); }
+.auth-art-copy { position: absolute; left: 56px; bottom: 64px; right: 56px; }
+.auth-art-copy span { display: block; font-size: 11px; letter-spacing: 3px; color: #cdb2f5; margin-bottom: 18px; }
+.auth-art-copy p { font: 400 clamp(38px, 4.2vw, 62px)/1.05 Georgia, serif; letter-spacing: -2px; color: #f6f0ff; margin: 0; }
+.auth-art-copy em { color: #c79bff; }
+
+.auth-panel { display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 36px 32px 28px; }
+.auth-brand { align-self: flex-start; font-size: 22px; }
+.auth-box { width: min(400px, 100%); margin: 40px 0; }
+.auth-box h1 { font: 400 46px/1.05 Georgia, serif; letter-spacing: -2px; margin: 0 0 12px; color: #f6f0ff; }
+.auth-lead { color: #b9afc8; font-size: 15px; line-height: 1.6; margin: 0 0 32px; }
+
+.auth-form { display: flex; flex-direction: column; gap: 20px; }
+.auth-field { display: flex; flex-direction: column; gap: 8px; }
+.auth-field > span { font-size: 13px; color: #cabbdc; }
+.auth-field input { width: 100%; height: 52px; padding: 0 16px; font: inherit; font-size: 16px; color: #f6f0ff; background: #ffffff0a; border: 1px solid #ffffff26; border-radius: 12px; outline: none; transition: border-color .15s, box-shadow .15s, background .15s; }
+.auth-field input::placeholder { color: #ffffff40; }
+.auth-field input:focus { border-color: #b17bfa; background: #ffffff10; box-shadow: 0 0 0 4px #b17bfa26; }
+.auth-code { text-transform: uppercase; letter-spacing: 5px; font-size: 18px !important; text-align: center; }
+.auth-pass { position: relative; }
+.auth-pass input { padding-right: 50px; }
+.auth-pass button { position: absolute; right: 6px; top: 6px; width: 40px; height: 40px; border: 0; border-radius: 8px; background: transparent; color: #b9afc8; cursor: pointer; display: grid; place-items: center; }
+.auth-pass button:hover { color: #fff; background: #ffffff14; }
+
+.auth-error { margin: 0; padding: 11px 14px; font-size: 14px; color: #ffb4c0; background: #ff5d7a1a; border: 1px solid #ff5d7a44; border-radius: 10px; }
+.auth-submit { height: 54px; margin-top: 4px; border: 0; border-radius: 12px; font: inherit; font-size: 16px; font-weight: 600; color: #130a20; background: linear-gradient(135deg, #c79bff, #9d63ee); cursor: pointer; box-shadow: 0 10px 30px #b17bfa40; transition: transform .15s, box-shadow .15s, opacity .15s; }
+.auth-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 14px 36px #b17bfa66; }
+.auth-submit:disabled { opacity: .6; cursor: wait; }
+
+.auth-alt { margin: 26px 0 0; text-align: center; font-size: 14px; color: #b9afc8; }
+.auth-alt button, .auth-back { border: 0; background: none; color: #d2b0ff; font: inherit; cursor: pointer; padding: 0; }
+.auth-alt button { text-decoration: underline; text-underline-offset: 4px; }
+.auth-back { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; margin-bottom: 22px; color: #b9afc8; }
+.auth-back:hover, .auth-alt button:hover { color: #fff; }
+.auth-foot { font-size: 12px; color: #ffffff55; margin: 0; }
+
+@media (max-width: 860px) {
+  .auth-split { grid-template-columns: 1fr; }
+  .auth-art { min-height: 0; height: 190px; }
+  .auth-art-shade { background: linear-gradient(0deg, #0a0710 0%, #0a071000 70%); }
+  .auth-art-copy { left: 24px; bottom: 18px; }
+  .auth-art-copy span { display: none; }
+  .auth-art-copy p { font-size: 28px; letter-spacing: -1px; }
+  .auth-panel { padding: 24px 20px; min-height: calc(100vh - 190px); }
+  .auth-brand { display: none; }
+  .auth-box { margin: 20px 0; }
+  .auth-box h1 { font-size: 38px; }
+}
