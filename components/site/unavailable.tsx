@@ -94,14 +94,14 @@ export function ArticleProgressView({ article }: { article: ArticleProgress }) {
 }
 
 /** Link inexistente ou de outra pessoa: nada de 404 seco. */
-export function NotAvailableView({ signedIn }: { signedIn: boolean }) {
+export function NotAvailableView({ signedIn, title, text }: { signedIn: boolean; title?: string; text?: string }) {
   return (
     <main className="na-wrap">
       <section className="glass na-card">
         <div className="eyebrow">Página indisponível</div>
-        <h1>Esse texto não está disponível</h1>
+        <h1>{title ?? "Esse texto não está disponível"}</h1>
         <p>
-          Ele pode ainda não ter sido publicado, ter mudado de endereço ou o link pode estar incompleto.
+          {text ?? "Ele pode ainda não ter sido publicado, ter mudado de endereço ou o link pode estar incompleto."}
           {signedIn
             ? " Se for um artigo seu, acompanhe o andamento no seu perfil."
             : " Se for um artigo seu, entre na sua conta para acompanhar o andamento."}
