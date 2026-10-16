@@ -1,15 +1,8 @@
-import { createHash } from "node:crypto";
 import { z } from "zod";
 
 // "Dia" no fuso de Brasília, para o gráfico e para contar 1 leitura por leitor/dia.
 export const brDay = (d = new Date()) => new Date(d.getTime() - 3 * 3600_000).toISOString().slice(0, 10);
 
-const salt = () => process.env.APP_ORIGIN || "revista";
-/** Chave anônima do leitor: nunca guarda IP, e-mail ou id em claro. */
-export function viewerKey(userId: string | null, ip: string, ua: string) {
-  const raw = userId ? `u:${userId}` : `a:${ip}|${ua.slice(0, 120)}`;
-  return createHash("sha256").update(`${salt()}|${raw}`).digest("hex").slice(0, 32);
-}
 
 const id = z.string().uuid();
 export const engageSchema = z.discriminatedUnion("action", [

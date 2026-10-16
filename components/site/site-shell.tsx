@@ -5,6 +5,7 @@ import SiteHeader from "./header";
 import SubNav from "./subnav";
 import SiteFooter from "./footer";
 import { SubmissionsProvider } from "./submissions";
+import { privateReviewMode } from "@/lib/runtime-mode";
 
 export default async function SiteShell({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -12,6 +13,7 @@ export default async function SiteShell({ children }: { children: React.ReactNod
   return (
     <SubmissionsProvider signedIn={!!user}>
       <Toaster theme="dark" richColors />
+      <a className="skip-link" href="#main-content">Pular para o conteúdo</a>
       <SiteHeader signedIn={!!user} displayName={user?.fullName || "Minha área"} money={money} />
       <div className="editionbar">
         <span>IDEIAS · CIÊNCIA · FUTURO</span>
@@ -20,7 +22,8 @@ export default async function SiteShell({ children }: { children: React.ReactNod
         </span>
       </div>
       <SubNav staff={!!user?.isStaff} money={money} />
-      <main>{children}</main>
+      {privateReviewMode() && <div className="review-notice">Validação privada · Leitura e navegação disponíveis. Contas e envios não conectados.</div>}
+      <main id="main-content" tabIndex={-1}>{children}</main>
       <SiteFooter money={money} staff={!!user?.isStaff} />
     </SubmissionsProvider>
   );

@@ -1,5 +1,7 @@
 import { database } from "@/lib/storage";
 import type { Article } from "@/lib/article-types";
+import { cache } from "react";
+import { editorialSeed, SEED_PULL, SEED_VERSION } from "./editorial-seed.mjs";
 
 type Row = {
   slug: string; title: string; summary: string; area: string; kind: string; authorName: string;
@@ -28,25 +30,34 @@ const toArticle = (r: Row): Article => ({
   publishedAt: r.publishedAt,
 });
 
-export async function listPublishedArticles(): Promise<Article[]> {
+const seededArticles = () => editorialSeed.map((article) => toArticle({
+  ...article,
+  pullquote: article.pullquote ?? SEED_PULL,
+  statusNote: article.statusNote ?? "Não revisado por pares.",
+  versionNote: article.versionNote ?? SEED_VERSION,
+  publishedAt: article.publishedAt ?? "2026-10-08T12:00:00.000Z",
+}));
+
+export const listPublishedArticles = cache(async function listPublishedArticles(): Promise<Article[]> {
   try {
     const { results } = await database()
       .prepare(`SELECT ${COLUMNS} FROM articles WHERE status='published' ORDER BY sort_order ASC, published_at DESC`)
       .all<Row>();
-    return results.map(toArticle);
+    return results.length ? results.map(toArticle) : seededArticles();
   } catch {
-    return [];
+    return seededArticles();
   }
-}
+});
 
-export async function getPublishedArticle(slug: string): Promise<Article | null> {
+export const getPublishedArticle = cache(async function getPublishedArticle(slug: string): Promise<Article | null> {
+  if (!/^[a-z0-9][a-z0-9-]{0,199}$/.test(slug)) return null;
   try {
     const row = await database()
       .prepare(`SELECT ${COLUMNS} FROM articles WHERE slug=? AND status='published'`)
       .bind(slug)
       .first<Row>();
-    return row ? toArticle(row) : null;
+    return row ? toArticle(row) : (await listPublishedArticles()).find((article) => article.slug === slug) ?? null;
   } catch {
-    return null;
+    return (await listPublishedArticles()).find((article) => article.slug === slug) ?? null;
   }
-}
+});

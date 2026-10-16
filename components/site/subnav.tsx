@@ -16,7 +16,7 @@ export default function SubNav({ staff, money }: { staff: boolean; money: boolea
   return (
     <nav className="network-subnav" aria-label="Áreas da plataforma">
       {links.map(([href, label]) => (
-        <Link key={href} href={href} className={path.startsWith(href) ? "active" : ""}>
+        <Link key={href} href={href} aria-current={path === href || path.startsWith(href + "/") ? "page" : undefined} className={path === href || path.startsWith(href + "/") ? "active" : ""}>
           {label}
         </Link>
       ))}

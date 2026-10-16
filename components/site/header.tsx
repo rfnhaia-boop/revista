@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Heart, LogOut, Menu, Search, Users, X } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SiteHeader({
   signedIn,
@@ -16,6 +17,21 @@ export default function SiteHeader({
   const path = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const header = useRef<HTMLElement>(null);
+  const toggle = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    function dismiss(event: KeyboardEvent) {
+      if (event.key === "Escape") { setOpen(false); toggle.current?.focus(); }
+    }
+    function outside(event: PointerEvent) {
+      if (!header.current?.contains(event.target as Node)) setOpen(false);
+    }
+    document.addEventListener("keydown", dismiss);
+    document.addEventListener("pointerdown", outside);
+    return () => { document.removeEventListener("keydown", dismiss); document.removeEventListener("pointerdown", outside); };
+  }, [open]);
+  useEffect(() => { setOpen(false); }, [path]);
   const links = [
     ["/", "Revista"],
     ["/explorar", "Explorar"],
@@ -23,17 +39,18 @@ export default function SiteHeader({
     ...(money ? [["/marketplace", "Marketplace"]] : []),
     ["/livros", "Livros"],
     ["/selos", "Selos"],
+    ["https://new-company.dricapillica.chatgpt.site/", "NEW Company ↗"],
   ];
-  const isActive = (href: string) => (href === "/" ? path === "/" || path.startsWith("/revista") : path.startsWith(href));
+  const isActive = (href: string) => !href.startsWith("http") && (href === "/" ? path === "/" || path.startsWith("/revista") : path.startsWith(href));
 
   return (
-    <header className="topbar">
+    <header className="topbar" ref={header}>
       <Link href="/" className="wordmark" onClick={() => setOpen(false)}>
         <span>Revista</span> NEW<span className="wordmark-dot">.</span>
       </Link>
-      <nav aria-label="Navegação principal" className={open ? "navigation open" : "navigation"}>
+      <nav id="main-navigation" aria-label="Navegação principal" className={open ? "navigation open" : "navigation"}>
         {links.map(([href, label]) => (
-          <Link key={href} href={href} className={isActive(href) ? "active" : ""} onClick={() => setOpen(false)}>
+          <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined} className={isActive(href) ? "active" : ""} onClick={() => setOpen(false)}>
             {label}
           </Link>
         ))}
@@ -44,7 +61,7 @@ export default function SiteHeader({
             <Heart size={14} /> Apoie a NEW
           </Link>
         )}
-        <Link href="/#search" className="iconbutton searchnav" aria-label="Pesquisar artigos">
+        <Link href="/#search" className="iconbutton searchnav" aria-label="Pesquisar artigos" onClick={() => setOpen(false)}>
           <Search size={19} />
         </Link>
         {signedIn ? (
@@ -64,15 +81,19 @@ export default function SiteHeader({
             aria-label="Sair da conta"
             title="Sair"
             onClick={async () => {
-              await fetch("/api/auth/logout", { method: "POST" });
-              router.push("/");
-              router.refresh();
+              try {
+                const response = await fetch("/api/auth/logout", { method: "POST" });
+                if (!response.ok) throw new Error();
+                setOpen(false);
+                router.push("/");
+                router.refresh();
+              } catch { toast.error("Não foi possível sair. Tente novamente."); }
             }}
           >
             <LogOut size={18} />
           </button>
         )}
-        <button className="iconbutton mobile-toggle" aria-label={open ? "Fechar menu" : "Abrir menu"} onClick={() => setOpen(!open)}>
+        <button ref={toggle} className="iconbutton mobile-toggle" aria-controls="main-navigation" aria-expanded={open} aria-label={open ? "Fechar menu" : "Abrir menu"} onClick={() => setOpen(!open)}>
           {open ? <X /> : <Menu />}
         </button>
       </div>

@@ -13,6 +13,7 @@ export default function SiteFooter({ money, staff }: { money: boolean; staff: bo
           Pesquisa em conhecimento. Conhecimento em oportunidade.
         </p>
         <div>
+          <a href="https://new-company.dricapillica.chatgpt.site/">Conheça a NEW Company ↗</a>
           {money && <Link href="/apoie">Apoie a NEW</Link>}
           <Link href="/explorar">Comunidade e Cadernos</Link>
           <Link href="/selos">Selos NEW</Link>

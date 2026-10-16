@@ -50,6 +50,16 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="new-company-bridge">
+        <img src="https://revista-new-validacao.dricapillica.chatgpt.site/new-company-light.png" alt="" aria-hidden="true" />
+        <div>
+          <div className="eyebrow">UMA PUBLICAÇÃO NEW COMPANY</div>
+          <h2>Ideias que nascem na NEW.<br /><em>Conhecimento que encontra pessoas.</em></h2>
+          <p>A Revista é a frente editorial da NEW Company: o lugar onde pesquisas, ensaios e perguntas ganham contexto, autoria e continuidade.</p>
+          <a className="outline" href="https://new-company.dricapillica.chatgpt.site/">Conhecer a NEW Company →</a>
+        </div>
+      </section>
+
       <section className="editorial-layout">
         <div>
           <div className="section-heading">

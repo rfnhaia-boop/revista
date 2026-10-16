@@ -1,4 +1,6 @@
 import { database } from "@/lib/storage";
+import { privateReviewMode } from "./runtime-mode";
+import { listPublishedArticles } from "./articles";
 
 export type PublicQuestion = {
   id: string;
@@ -10,6 +12,7 @@ export type PublicQuestion = {
 };
 
 export async function listPublicQuestions(): Promise<PublicQuestion[]> {
+  if (privateReviewMode()) return [];
   try {
     const { results } = await database()
       .prepare(
@@ -33,6 +36,7 @@ export type ObservatoryStats = {
 /** Somente contagens agregadas de conteúdo já público. */
 export async function observatoryStats(): Promise<ObservatoryStats> {
   const zero = { articles: 0, authors: 0, notebooks: 0, questions: 0, selected: 0 };
+  if (privateReviewMode()) return { ...zero, articles: (await listPublishedArticles()).length };
   try {
     const row = await database()
       .prepare(

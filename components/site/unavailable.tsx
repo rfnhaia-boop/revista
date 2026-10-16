@@ -62,7 +62,7 @@ export function ArticleProgressView({ article }: { article: ArticleProgress }) {
   const editable = article.status === "draft" || article.status === "changes_requested";
   const showSteps = article.status !== "changes_requested" && article.status !== "rejected";
   return (
-    <main className="na-wrap">
+    <div className="na-wrap">
       <section className="glass na-card">
         <div className="eyebrow">Seu artigo · só você vê isto</div>
         <h1>{msg.title}</h1>
@@ -89,14 +89,14 @@ export function ArticleProgressView({ article }: { article: ArticleProgress }) {
           <p className="na-fine">Enquanto a equipe analisa, o texto fica bloqueado para edição.</p>
         )}
       </section>
-    </main>
+    </div>
   );
 }
 
 /** Link inexistente ou de outra pessoa: nada de 404 seco. */
 export function NotAvailableView({ signedIn, title, text }: { signedIn: boolean; title?: string; text?: string }) {
   return (
-    <main className="na-wrap">
+    <div className="na-wrap">
       <section className="glass na-card">
         <div className="eyebrow">Página indisponível</div>
         <h1>{title ?? "Esse texto não está disponível"}</h1>
@@ -121,6 +121,6 @@ export function NotAvailableView({ signedIn, title, text }: { signedIn: boolean;
           </Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

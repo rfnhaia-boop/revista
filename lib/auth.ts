@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { database } from "@/lib/storage";
+import { privateReviewMode } from "./runtime-mode";
 
 export type CurrentUser = {
   userId: string;
@@ -50,6 +51,7 @@ export async function destroySession(token: string) {
 }
 
 export const getCurrentUser = cache(async function getCurrentUser(): Promise<CurrentUser | null> {
+  if (privateReviewMode()) return null;
   const jar = await cookies();
   if (devAuthEnabled() && jar.get(DEV_COOKIE_NAME)?.value === "1")
     return { userId: "dev_local", displayName: "Dev Local", email: "dev@local.test", fullName: "Dev Local", role: "member", isStaff: false, isAdmin: false };

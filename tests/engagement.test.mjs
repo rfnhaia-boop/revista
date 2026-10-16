@@ -1,5 +1,6 @@
+import { viewerKey } from "../lib/viewer-key.ts";
 import assert from 'node:assert/strict';
-import { cleanReply, engageSchema, viewerKey, brDay, REPLY_MAX } from '../lib/engagement.ts';
+import { cleanReply, engageSchema, brDay, REPLY_MAX } from '../lib/engagement.ts';
 
 const id = crypto.randomUUID();
 // ações válidas
