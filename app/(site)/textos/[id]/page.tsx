@@ -4,7 +4,10 @@ import Markdown from "@/components/editor/markdown";
 import NotebookConversation from "@/app/notebook-conversation";
 import ThoughtOwnerBar from "@/app/thought-owner-bar";
 import ThoughtShare from "@/app/thought-share";
+import PayBox from "@/components/site/pay-box";
 import { getCurrentUser } from "@/lib/auth";
+import { moneyEnabled } from "@/lib/features";
+import { hasAccess } from "@/lib/payments";
 import { database } from "@/lib/storage";
 import { privateReviewMode } from "@/lib/runtime-mode";
 import { notFound } from "next/navigation";
@@ -44,7 +47,12 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const r = await load(id, uid);
   if (!r) notFound();
   const mine = r.ownerId === uid;
-  const locked = r.access === "paid" && !mine;
+  const paid = r.access === "paid" && !mine;
+  const unlocked = paid && !!uid && (await hasAccess(uid, r.ownerId, r.id));
+  const locked = paid && !unlocked;
+  const plans = locked && moneyEnabled()
+    ? (await database().prepare("SELECT id,name,price_cents AS priceCents FROM plans WHERE owner_id=? AND active=1 ORDER BY price_cents ASC").bind(r.ownerId).all<{ id: string; name: string; priceCents: number }>()).results
+    : [];
   const words = r.body.trim().split(/\s+/).length;
   const date = new Date(r.createdAt).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" });
   return (
@@ -70,11 +78,15 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
       </header>
       {mine && <ThoughtOwnerBar id={r.id} />}
       {locked ? (
-        <div className="paid-lock glass">
-          <h3>Acesso por compra avulsa</h3>
-          <p>{r.excerpt}</p>
-          <p className="fine">Pagamento ainda não disponível. Nenhuma cobrança ou liberação de acesso foi realizada.</p>
-        </div>
+        moneyEnabled() ? (
+          <PayBox notebookId={r.id} priceCents={r.priceCents} creatorName={r.name} plans={plans} excerpt={r.excerpt} signedIn={!!user} loginHref={`/entrar?return_to=${encodeURIComponent("/textos/" + r.id)}`} />
+        ) : (
+          <div className="paid-lock glass">
+            <h3>Conteúdo pago</h3>
+            <p>{r.excerpt}</p>
+            <p className="fine">Pagamento ainda não disponível. Nenhuma cobrança ou liberação de acesso foi realizada.</p>
+          </div>
+        )
       ) : (
         <div className="reading article-reading tv-body">
           <Markdown>{r.body}</Markdown>

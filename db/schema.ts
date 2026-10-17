@@ -363,3 +363,8 @@ export const webhookEvents = pgTable("webhook_events", {
   receivedAt: text("received_at").notNull(),
   processedAt: text("processed_at"),
 });
+export const paymentCustomers = pgTable("payment_customers", {
+  ownerId: text("owner_id").primaryKey(),
+  providerCustomerId: text("provider_customer_id").notNull(),
+  createdAt: text("created_at").notNull(),
+});

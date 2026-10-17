@@ -7,6 +7,7 @@ export default function SubNav({ staff, money }: { staff: boolean; money: boolea
   const links = [
     ["/minha-new", "Minha NEW"],
     ["/caderno", "Meu Caderno"],
+    ...(money ? [["/assinaturas", "Assinaturas"]] : []),
     ["/projetos", "Projetos"],
     ...(money ? [["/apoiador", "Área do apoiador"]] : []),
     ["/research", "Perguntas públicas"],

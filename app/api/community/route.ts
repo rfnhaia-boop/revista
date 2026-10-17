@@ -116,6 +116,11 @@ export async function POST(request: Request) {
     if (p.action === "post") {
       if (p.access === "paid" && !moneyEnabled())
         return json({ error: "Conteúdo pago ainda não está disponível." }, 400);
+      if (p.access === "paid") {
+        const payout = await db.prepare("SELECT status FROM payout_accounts WHERE owner_id=?").bind(uid).first<{ status: string }>();
+        if (!payout || payout.status === "creating" || payout.status === "rejected")
+          return json({ error: "Abra sua conta de recebimento (aba Receber) antes de publicar conteúdo pago." }, 409);
+      }
       const author = await db
         .prepare("SELECT id FROM profiles WHERE owner_id=?")
         .bind(uid)

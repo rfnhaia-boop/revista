@@ -1,4 +1,5 @@
 import { database } from "@/lib/storage";
+import { commissionPercent } from "@/lib/checkout-validation";
 import { effectOf, SUBSCRIPTION_GRACE_DAYS, type AsaasWebhook } from "@/lib/payments-core";
 
 export { asaasWebhookSchema, effectOf, tokenMatches, SUBSCRIPTION_GRACE_DAYS, type AsaasWebhook, type PaymentEffect } from "@/lib/payments-core";
@@ -14,6 +15,36 @@ type PaymentRow = {
   subscriptionId: string | null;
   status: string;
 };
+
+
+async function findPayment(providerId: string) {
+  return database()
+    .prepare("SELECT id,payer_owner_id AS payerOwnerId,creator_owner_id AS creatorOwnerId,kind,notebook_id AS notebookId,subscription_id AS subscriptionId,status FROM payments WHERE provider_payment_id=?")
+    .bind(providerId)
+    .first<PaymentRow>();
+}
+
+/** Cobranças mensais seguintes de uma assinatura nascem no provedor: registramos aqui ao chegar o primeiro evento. */
+async function adoptRecurring(evt: AsaasWebhook) {
+  const p = evt.payment as { id: string; subscription?: unknown; value?: unknown } | undefined;
+  if (!p || typeof p.subscription !== "string" || typeof p.value !== "number") return null;
+  const db = database();
+  const sub = await db
+    .prepare("SELECT s.id,s.reader_owner_id AS reader,s.creator_owner_id AS creator,pl.price_cents AS priceCents FROM subscriptions s JOIN plans pl ON pl.id=s.plan_id WHERE s.provider_subscription_id=?")
+    .bind(p.subscription)
+    .first<{ id: string; reader: string; creator: string; priceCents: number }>();
+  if (!sub) return null;
+  const now = new Date().toISOString();
+  const cents = Math.round(p.value * 100);
+  // O valor cobrado tem de bater com o plano; se não bater, não liberamos nada.
+  if (cents !== sub.priceCents) return null;
+  const commission = Math.round((cents * commissionPercent(process.env.COMMISSION_PERCENT)) / 100);
+  await db
+    .prepare("INSERT INTO payments (id,provider_payment_id,payer_owner_id,creator_owner_id,kind,subscription_id,amount_cents,commission_cents,status,created_at,updated_at) VALUES (?,?,?,?,'subscription',?,?,?,'pending',?,?) ON CONFLICT (provider_payment_id) DO NOTHING")
+    .bind(crypto.randomUUID(), p.id, sub.reader, sub.creator, sub.id, cents, commission, now, now)
+    .run();
+  return findPayment(p.id);
+}
 
 /**
  * Aplica o evento uma única vez (idempotente por event id).
@@ -35,10 +66,8 @@ export async function applyWebhook(evt: AsaasWebhook, now = new Date()): Promise
     await done.run();
     return "ignored";
   }
-  const payment = await db
-    .prepare("SELECT id,payer_owner_id AS payerOwnerId,creator_owner_id AS creatorOwnerId,kind,notebook_id AS notebookId,subscription_id AS subscriptionId,status FROM payments WHERE provider_payment_id=?")
-    .bind(providerId)
-    .first<PaymentRow>();
+  let payment = await findPayment(providerId);
+  if (!payment) payment = await adoptRecurring(evt);
   if (!payment) {
     await done.run();
     return "unknown-payment";
@@ -58,7 +87,7 @@ export async function applyWebhook(evt: AsaasWebhook, now = new Date()): Promise
         .bind(crypto.randomUUID(), payment.payerOwnerId, payment.creatorOwnerId, payment.kind, payment.notebookId, payment.id, stamp, endsAt),
     ];
     if (payment.subscriptionId)
-      statements.push(db.prepare("UPDATE subscriptions SET status='active',current_period_end=?,updated_at=? WHERE id=?").bind(endsAt, stamp, payment.subscriptionId));
+      statements.push(db.prepare("UPDATE subscriptions SET status='active',current_period_end=?,updated_at=? WHERE id=? AND status<>'canceled'").bind(endsAt, stamp, payment.subscriptionId));
     statements.push(done);
     await db.batch(statements);
   } else if (effect === "refunded") {

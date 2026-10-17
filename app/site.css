@@ -223,3 +223,27 @@ html { scroll-padding-top: calc(var(--site-header-height) + 24px); }
 .tv-spark rect { fill: #ffffff14; }
 .tv-spark rect.on { fill: #b17bfa; }
 a.outline.small, a.primary.small, button.outline.small { min-height: 34px; padding: 0 14px; font-size: 13px; }
+
+/* Pagamento (Pix) */
+.pay-box { display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; }
+.pay-form, .pay-pix { text-align: left; }
+.pay-box h3 { margin: 0; }
+.pay-form { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 520px; }
+.pay-form fieldset { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.pay-form legend { font-size: 13px; color: #b9afc8; margin-bottom: 6px; }
+.pay-opt { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px solid #ffffff1f; border-radius: 12px; cursor: pointer; }
+.pay-opt:has(input:checked) { border-color: #b17bfa; background: #b17bfa14; }
+.pay-opt small { display: block; margin-top: 4px; color: #9f94b0; font-size: 12.5px; line-height: 1.5; }
+.pay-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #b9afc8; }
+.pay-field input { padding: 11px 13px; border-radius: 10px; border: 1px solid #ffffff1f; background: #ffffff0d; color: #f6f0ff; font: inherit; font-size: 15px; }
+.pay-check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; color: #b9afc8; }
+.pay-pix { display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; }
+.pay-qr { background: #fff; padding: 8px; border-radius: 12px; }
+.pay-code { max-width: 100%; word-break: break-all; font-size: 12px; padding: 10px 12px; border-radius: 10px; background: #ffffff0d; color: #cfc6dc; }
+
+/* Minhas assinaturas */
+.subs { max-width: 760px; margin: 0 auto; padding: 36px 20px 90px; display: flex; flex-direction: column; gap: 14px; color: #ece3f7; }
+.subs h2 { font-size: 18px; margin: 12px 0 0; }
+.subs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.subs-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 14px 18px; }
+.subs-row small { display: block; margin-top: 4px; color: #9f94b0; font-size: 12.5px; }
