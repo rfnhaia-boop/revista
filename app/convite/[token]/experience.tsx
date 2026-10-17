@@ -91,7 +91,7 @@ export default function InviteExperience({ token }: { token: string }) {
             <label><span>E-mail convidado</span><input value={invite.email} disabled /></label>
             <label><span>Crie uma senha</span><div className="invite-password"><input name="password" type={show ? "text" : "password"} required minLength={8} autoComplete="new-password" /><button type="button" onClick={() => setShow(!show)} aria-label={show ? "Ocultar senha" : "Mostrar senha"}>{show ? <EyeOff size={17} /> : <Eye size={17} />}</button></div><small>Mínimo de 8 caracteres</small></label>
             <label><span>Repita a senha</span><input name="confirmPassword" type={show ? "text" : "password"} required minLength={8} autoComplete="new-password" /></label>
-            <label className="invite-consent"><input name="consent" type="checkbox" required /><span>Confirmo que este convite foi enviado para mim e aceito participar da comunidade NEW.</span></label>
+            <label className="invite-consent"><input name="consent" type="checkbox" required /><span>Confirmo que este convite foi enviado para mim, aceito participar da comunidade NEW e li os <a href="/termos" target="_blank">Termos de Uso</a> e a <a href="/privacidade" target="_blank">Política de Privacidade</a>.</span></label>
             {error && <p className="invite-error" role="alert">{error}</p>}
             <button className="invite-accept" disabled={busy}>{busy ? "Criando seu espaço…" : <>Entrar para a Revista NEW <ArrowRight size={18} /></>}</button>
           </form>

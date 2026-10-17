@@ -27,7 +27,7 @@ export default function EntrarForm({ returnTo }: { returnTo: string }) {
     try {
       if (mode === "login")
         await post("/api/auth/login", { email: String(f.get("email")), senha: String(f.get("senha")) });
-      else await post("/api/auth/ativar", { email: String(f.get("email")), codigo: String(f.get("codigo")) });
+      else await post("/api/auth/ativar", { email: String(f.get("email")), codigo: String(f.get("codigo")), terms: f.get("terms") === "on" });
       window.location.href = returnTo;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao entrar.");
@@ -94,6 +94,13 @@ export default function EntrarForm({ returnTo }: { returnTo: string }) {
               <label className="auth-field">
                 <span>Código de ativação</span>
                 <input name="codigo" required autoComplete="off" maxLength={9} placeholder="XXXX-XXXX" className="auth-code" />
+              </label>
+            )}
+
+            {mode === "ativar" && (
+              <label className="auth-terms">
+                <input name="terms" type="checkbox" required />
+                <span>Li e aceito os <Link href="/termos" target="_blank">Termos de Uso</Link> e a <Link href="/privacidade" target="_blank">Política de Privacidade</Link>.</span>
               </label>
             )}
 

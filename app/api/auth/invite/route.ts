@@ -4,6 +4,7 @@ import { createSession, sessionCookie } from "@/lib/auth";
 import { hashPassword } from "@/lib/password";
 import { clientIp, tooMany } from "@/lib/rate-limit";
 import { database } from "@/lib/storage";
+import { acceptanceStatement } from "@/lib/terms";
 import { validOrigin } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
     db.prepare("INSERT INTO profiles (id,owner_id,slug,name,headline,location,bio,trajectory,interests,link,show_supporters,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")
       .bind(crypto.randomUUID(), userId, `autor-${userId.slice(0, 8)}`, parsed.data.name, "", "", "", "", "", "", 0, now),
     db.prepare("UPDATE creator_invitations SET status='accepted',accepted_by=? WHERE id=? AND status='open'").bind(userId, invite!.id),
+    acceptanceStatement(userId, "invite", now),
     db.prepare("INSERT INTO audit_events (id,owner_id,entity_id,action,created_at) VALUES (?,?,?,?,?)").bind(crypto.randomUUID(), userId, invite!.id, "invite.accepted", now),
   ]);
   const session = await createSession(userId);

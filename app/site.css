@@ -247,3 +247,21 @@ a.outline.small, a.primary.small, button.outline.small { min-height: 34px; paddi
 .subs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .subs-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 14px 18px; }
 .subs-row small { display: block; margin-top: 4px; color: #9f94b0; font-size: 12.5px; }
+
+/* Termos e privacidade */
+.legal { max-width: 760px; margin: 0 auto; padding: 36px 20px 90px; color: #d9d0e6; line-height: 1.75; font-size: 16px; }
+.legal h1 { font: 400 clamp(30px, 5vw, 42px)/1.15 Georgia, serif; color: #f6f0ff; margin: 0 0 6px; }
+.legal h2 { font: 400 22px/1.3 Georgia, serif; color: #f6f0ff; margin: 34px 0 8px; }
+.legal p, .legal ul { margin: 0 0 12px; }
+.legal ul { padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }
+.legal a { color: #c9a2ff; }
+.legal-meta { color: #9f94b0; font-size: 14px; margin-bottom: 20px !important; }
+.legal-draft { padding: 12px 16px; border-radius: 12px; border: 1px solid #e7b86655; background: #e7b86614; color: #f1d9a8; font-size: 14px; margin-bottom: 20px !important; }
+.legal-table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 8px 0 16px; }
+.legal-table th, .legal-table td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid #ffffff14; }
+.legal-table th { color: #b9afc8; font-weight: 500; }
+@media (max-width: 640px) { .legal-table { display: block; overflow-x: auto; } }
+
+.terms-notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 18px; padding: 12px 20px; background: #b17bfa1f; border-bottom: 1px solid #b17bfa55; font-size: 14.5px; color: #ece3f7; }
+.terms-notice p { margin: 0; max-width: 780px; }
+.terms-notice a { color: #d9bcff; }

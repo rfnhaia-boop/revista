@@ -50,3 +50,7 @@
   .auth-box { margin: 20px 0; }
   .auth-box h1 { font-size: 38px; }
 }
+
+.auth-terms { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.5; color: #b9afc8; }
+.auth-terms input { margin-top: 3px; }
+.auth-terms a { color: #c9a2ff; }

@@ -3,6 +3,7 @@ import { createSession, sessionCookie } from "@/lib/auth";
 import { ensureBootstrapAdmin } from "@/lib/admin";
 import { resgatarCodigo } from "@/lib/cofre";
 import { hashPassword } from "@/lib/password";
+import { recordAcceptance } from "@/lib/terms";
 import { clientIp, tooMany } from "@/lib/rate-limit";
 import { database } from "@/lib/storage";
 import { validOrigin } from "@/lib/validation";
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   if (tooMany("ativar:" + clientIp(request), 10, 15 * 60_000))
     return json({ error: "Muitas tentativas. Aguarde alguns minutos." }, 429);
   const parsed = activateSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return json({ error: "Informe o código (XXXX-XXXX) e o e-mail do seu cadastro." }, 400);
+  if (!parsed.success) return json({ error: "Informe o código (XXXX-XXXX), o e-mail do seu cadastro e aceite os Termos." }, 400);
   const raw = parsed.data.codigo.replace("-", "");
   const codigo = raw.slice(0, 4) + "-" + raw.slice(4);
 
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
     .prepare("INSERT INTO audit_events (id,owner_id,entity_id,action,created_at) VALUES (?,?,?,?,?)")
     .bind(crypto.randomUUID(), userId, userId, "auth.activated", now)
     .run();
+  await recordAcceptance(userId, "activation");
   await ensureBootstrapAdmin(userId, mail);
   const s = await createSession(userId);
   return json({ ok: true, name: nome }, 200, { "Set-Cookie": sessionCookie(s.token, s.maxAge) });

@@ -18,6 +18,8 @@ export default function SiteFooter({ money, staff }: { money: boolean; staff: bo
           <Link href="/explorar">Comunidade e Cadernos</Link>
           <Link href="/selos">Selos NEW</Link>
           <Link href="/protocolo">Protocolo e transparência</Link>
+          <Link href="/termos">Termos de Uso</Link>
+          <Link href="/privacidade">Política de Privacidade</Link>
           {staff && <Link href="/admin">Gestão editorial</Link>}
         </div>
       </div>

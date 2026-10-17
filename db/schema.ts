@@ -368,3 +368,14 @@ export const paymentCustomers = pgTable("payment_customers", {
   providerCustomerId: text("provider_customer_id").notNull(),
   createdAt: text("created_at").notNull(),
 });
+export const termsAcceptances = pgTable(
+  "terms_acceptances",
+  {
+    id: text("id").primaryKey(),
+    ownerId: text("owner_id").notNull(),
+    version: text("version").notNull(),
+    source: text("source").notNull(),
+    acceptedAt: text("accepted_at").notNull(),
+  },
+  (t) => [index("terms_acceptances_owner").on(t.ownerId, t.version)],
+);

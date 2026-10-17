@@ -103,7 +103,7 @@ export default function PayBox({ notebookId, priceCents, creatorName, plans, exc
             ))}
           </fieldset>
           <label className="pay-field">CPF ou CNPJ (exigido para emitir o Pix)<input name="cpfCnpj" required inputMode="numeric" autoComplete="off" /></label>
-          <label className="pay-check"><input name="consent" type="checkbox" required /><span>Autorizo enviar meu CPF/CNPJ ao provedor de pagamento para emitir o Pix.</span></label>
+          <label className="pay-check"><input name="consent" type="checkbox" required /><span>Li os <Link href="/termos" target="_blank">Termos de Uso</Link> e a <Link href="/privacidade" target="_blank">Política de Privacidade</Link> e autorizo enviar meu CPF/CNPJ ao provedor de pagamento para emitir o Pix.</span></label>
           <button className="primary" disabled={busy}>{busy ? "Gerando Pix…" : "Gerar Pix"}</button>
         </form>
       )}
