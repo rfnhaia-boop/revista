@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Bookmark, Eye, EyeOff, Heart, MessageCircle, PenLine, Plus, Share2, Users, Feather, Inbox, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import ReceberTab from "./caderno-receber";
 import BarChart from "@/components/site/bar-chart";
 import { delta, PERIODS, type InboxItem, type Insights } from "@/lib/engagement";
 import type { Community, Entry } from "@/lib/community-types";
 
-type Tab = "geral" | "textos" | "respostas" | "salvos";
+type Tab = "geral" | "textos" | "respostas" | "salvos" | "receber";
 type Filter = "todos" | "published" | "draft" | "hidden";
-const TABS: Tab[] = ["geral", "textos", "respostas", "salvos"];
+const TABS: Tab[] = ["geral", "textos", "respostas", "salvos", "receber"];
 const when = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 const short = (iso: string) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
 const STATUS: Record<string, string> = { published: "Publicado", draft: "Rascunho", hidden: "Oculto pela equipe" };
@@ -22,8 +23,8 @@ async function engage(payload: unknown) {
   return d;
 }
 
-export default function CadernoHome({ signedIn, initialTab }: { signedIn: boolean; initialTab: string }) {
-  const [tab, setTab] = useState<Tab>((TABS as string[]).includes(initialTab) ? (initialTab as Tab) : "geral");
+export default function CadernoHome({ signedIn, initialTab, moneyOn = false }: { signedIn: boolean; initialTab: string; moneyOn?: boolean }) {
+  const [tab, setTab] = useState<Tab>((TABS as string[]).includes(initialTab) && (initialTab !== "receber" || moneyOn) ? (initialTab as Tab) : "geral");
   const [data, setData] = useState<Community | null>(null);
   const [error, setError] = useState("");
   const [tick, setTick] = useState(0);
@@ -100,8 +101,9 @@ export default function CadernoHome({ signedIn, initialTab }: { signedIn: boolea
             ["textos", "Meus textos", mine.length],
             ["respostas", "Respostas", newReplies],
             ["salvos", "Salvos", saved.length],
+            ["receber", "Receber", 0],
           ] as [Tab, string, number][]
-        ).map(([k, label, n]) => (
+        ).filter(([k]) => k !== "receber" || moneyOn).map(([k, label, n]) => (
           <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => go(k)}>
             {label}
             {k === "respostas" ? n > 0 && <i className="ch-dot">{n}</i> : n > 0 && <small>{n}</small>}
@@ -113,6 +115,7 @@ export default function CadernoHome({ signedIn, initialTab }: { signedIn: boolea
       {tab === "textos" && <Texts mine={mine} />}
       {tab === "respostas" && <Replies onChange={refresh} hasNew={newReplies > 0} tick={tick} />}
       {tab === "salvos" && <Saved saved={saved} onChange={refresh} />}
+      {tab === "receber" && moneyOn && <ReceberTab />}
     </div>
   );
 }

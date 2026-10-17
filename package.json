@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:dev": "node scripts/dev-db.mjs",
     "db:seed": "node --env-file=.env.local scripts/seed-articles.mjs",
-    "db:migrate": "node --env-file=.env.local scripts/migrate.mjs"
+    "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
+    "mock:asaas": "node scripts/mock-asaas.mjs"
   },
   "dependencies": {
     "@tiptap/core": "3.32.0",
