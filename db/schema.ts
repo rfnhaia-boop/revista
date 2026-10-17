@@ -1,4 +1,4 @@
-import { pgTable, text, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, index, uniqueIndex } from "drizzle-orm/pg-core";
 export const submissions = pgTable(
   "submissions",
   {
@@ -284,3 +284,82 @@ export const notebookReactions = pgTable(
   },
   (t) => [index("notebook_reactions_post").on(t.postId)],
 );
+
+export const payoutAccounts = pgTable("payout_accounts", {
+  ownerId: text("owner_id").primaryKey(),
+  provider: text("provider").notNull().default("asaas"),
+  providerAccountId: text("provider_account_id").notNull().default(""),
+  walletId: text("wallet_id").notNull().default(""),
+  status: text("status").notNull().default("pending"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+export const plans = pgTable(
+  "plans",
+  {
+    id: text("id").primaryKey(),
+    ownerId: text("owner_id").notNull(),
+    name: text("name").notNull(),
+    priceCents: integer("price_cents").notNull(),
+    interval: text("interval").notNull().default("monthly"),
+    active: integer("active").notNull().default(1),
+    createdAt: text("created_at").notNull(),
+  },
+  (t) => [index("plans_owner").on(t.ownerId)],
+);
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: text("id").primaryKey(),
+    readerOwnerId: text("reader_owner_id").notNull(),
+    creatorOwnerId: text("creator_owner_id").notNull(),
+    planId: text("plan_id").notNull(),
+    providerSubscriptionId: text("provider_subscription_id").unique(),
+    status: text("status").notNull().default("pending"),
+    currentPeriodEnd: text("current_period_end"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (t) => [index("subscriptions_reader").on(t.readerOwnerId), index("subscriptions_creator").on(t.creatorOwnerId)],
+);
+export const payments = pgTable(
+  "payments",
+  {
+    id: text("id").primaryKey(),
+    providerPaymentId: text("provider_payment_id").notNull().unique(),
+    payerOwnerId: text("payer_owner_id").notNull(),
+    creatorOwnerId: text("creator_owner_id").notNull(),
+    kind: text("kind").notNull(),
+    notebookId: text("notebook_id"),
+    subscriptionId: text("subscription_id"),
+    amountCents: integer("amount_cents").notNull(),
+    commissionCents: integer("commission_cents").notNull().default(0),
+    status: text("status").notNull().default("pending"),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (t) => [index("payments_payer").on(t.payerOwnerId)],
+);
+export const entitlements = pgTable(
+  "entitlements",
+  {
+    id: text("id").primaryKey(),
+    readerOwnerId: text("reader_owner_id").notNull(),
+    creatorOwnerId: text("creator_owner_id").notNull(),
+    kind: text("kind").notNull(),
+    notebookId: text("notebook_id"),
+    paymentId: text("payment_id").notNull(),
+    startsAt: text("starts_at").notNull(),
+    endsAt: text("ends_at"),
+    status: text("status").notNull().default("active"),
+  },
+  (t) => [index("entitlements_reader").on(t.readerOwnerId, t.status), uniqueIndex("entitlements_payment_unique").on(t.paymentId)],
+);
+export const webhookEvents = pgTable("webhook_events", {
+  eventId: text("event_id").primaryKey(),
+  provider: text("provider").notNull(),
+  event: text("event").notNull(),
+  payload: text("payload").notNull(),
+  receivedAt: text("received_at").notNull(),
+  processedAt: text("processed_at"),
+});
