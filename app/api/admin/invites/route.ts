@@ -10,7 +10,7 @@ export async function GET() {
   if (me instanceof Response) return me;
   const { results } = await database()
     .prepare(
-      "SELECT i.id,i.email,i.role,i.status,i.expires_at AS expiresAt,i.created_at AS createdAt,u.name AS acceptedName FROM creator_invitations i LEFT JOIN users u ON u.id=i.accepted_by ORDER BY i.created_at DESC LIMIT 200",
+      "SELECT i.id,i.email,i.invited_name AS invitedName,i.message,i.role,i.status,i.expires_at AS expiresAt,i.created_at AS createdAt,u.name AS acceptedName FROM creator_invitations i LEFT JOIN users u ON u.id=i.accepted_by ORDER BY i.created_at DESC LIMIT 200",
     )
     .all();
   return json({ items: results });
@@ -32,11 +32,13 @@ export async function POST(request: Request) {
   const id = crypto.randomUUID();
   await db
     .prepare(
-      "INSERT INTO creator_invitations (id,email,token_hash,role,status,expires_at,created_at) VALUES (?,?,?,?,'open',?,?)",
+      "INSERT INTO creator_invitations (id,email,invited_name,message,token_hash,role,status,expires_at,created_at) VALUES (?,?,?,?,?,?,'open',?,?)",
     )
     .bind(
       id,
       body.email,
+      body.invitedName,
+      body.message,
       createHash("sha256").update(token).digest("hex"),
       body.role,
       new Date(now.getTime() + 14 * 86400000).toISOString(),

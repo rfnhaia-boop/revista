@@ -1,6 +1,7 @@
 import { BookOpen, Plus } from "lucide-react";
 import PageHead from "@/components/site/page-head";
 import { OpenFormButton, SubmissionsList } from "@/components/site/submissions";
+import BookClub from "@/components/site/book-club";
 
 export const metadata = {
   title: "Livros · Revista NEW",
@@ -20,6 +21,7 @@ export default function Page() {
           </OpenFormButton>
         }
       />
+      <BookClub />
       <div className="book-intro glass">
         <div className="book-typography">
           <span>NEW · LIVROS</span>

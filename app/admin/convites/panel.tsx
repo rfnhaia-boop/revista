@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Copy } from "lucide-react";
 import { Empty, Loading, Pill, fmtDate, send, useAdminList } from "../ui";
 
-type Item = { id: string; email: string; role: string; status: string; expiresAt: string; createdAt: string; acceptedName: string | null };
+type Item = { id: string; email: string; invitedName: string; message: string; role: string; status: string; expiresAt: string; createdAt: string; acceptedName: string | null };
 const role: Record<string, string> = { creator: "Criador", researcher: "Pesquisador" };
 
 function state(i: Item): [string, "ok" | "warn" | "bad" | "info"] {
@@ -26,8 +26,9 @@ export default function InvitesPanel() {
     setBusy(true);
     try {
       const email = String(f.get("email"));
-      const r = await send<{ token: string }>("/api/admin/invites", { action: "create", email, role: String(f.get("role")) });
-      setToken({ email, value: r.token });
+      const r = await send<{ token: string }>("/api/admin/invites", { action: "create", email, invitedName: String(f.get("invitedName")), message: String(f.get("message")), role: String(f.get("role")) });
+      const origin = window.location.origin;
+      setToken({ email, value: `${origin}/convite/${r.token}` });
       form.reset();
       await reload();
     } catch (err) {
@@ -42,6 +43,10 @@ export default function InvitesPanel() {
     <>
       <form className="glass adm-form-inline" onSubmit={create}>
         <label>
+          Nome da pessoa
+          <input name="invitedName" required minLength={2} maxLength={100} placeholder="Como ela será recebida" />
+        </label>
+        <label>
           E-mail do convidado
           <input name="email" type="email" required maxLength={200} placeholder="pessoa@exemplo.com" />
         </label>
@@ -52,6 +57,10 @@ export default function InvitesPanel() {
             <option value="researcher">Pesquisador</option>
           </select>
         </label>
+        <label className="adm-invite-message">
+          Mensagem pessoal <small>(opcional)</small>
+          <textarea name="message" maxLength={500} rows={3} placeholder="Escreva por que você quer essa pessoa na Revista NEW…" />
+        </label>
         <button className="adm-act primary" disabled={busy}>{busy ? "Gerando…" : "Gerar convite"}</button>
       </form>
 
@@ -59,11 +68,11 @@ export default function InvitesPanel() {
         <div className="glass adm-token" role="status">
           <div>
             <strong>Convite gerado para {token.email}</strong>
-            <p>Copie agora e envie à pessoa: o código <b>não será mostrado de novo</b>. Vale por 14 dias e só funciona na conta com esse e-mail (Minha NEW → Usar convite).</p>
+            <p>Envie este link à pessoa. Ela abrirá um convite personalizado, criará a senha e entrará direto no Caderno. O link vale por 14 dias e só pode ser usado uma vez.</p>
             <code>{token.value}</code>
           </div>
           <button className="adm-act primary" onClick={() => navigator.clipboard.writeText(token.value).then(() => toast.success("Código copiado."))}>
-            <Copy size={15} /> Copiar
+            <Copy size={15} /> Copiar link
           </button>
         </div>
       )}

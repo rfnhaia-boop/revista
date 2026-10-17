@@ -2,6 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 import './demo-mobile.css';
 import './auth.css';
+import './invite.css';
+import './books.css';
 import './dashboard.css';
 import './site.css';
 const title='Revista NEW — Ideias, ciência e futuro';

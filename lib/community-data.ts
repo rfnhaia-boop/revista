@@ -1,4 +1,6 @@
 import { database } from "@/lib/storage";
+import { privateReviewMode } from "./runtime-mode";
+import { listPublishedArticles } from "./articles";
 
 export type FeedPost = {
   id: string;
@@ -37,6 +39,7 @@ type PostRow = Omit<FeedPost, "minutes"> & { chars: number };
 
 /** Pensamentos publicados, do mais recente ao mais antigo (opcionalmente só de um autor). */
 export async function listFeed(opts: { authorSlug?: string; limit?: number } = {}): Promise<FeedPost[]> {
+  if (privateReviewMode()) return [];
   const params: unknown[] = ["published"];
   let where = "n.status=?";
   if (opts.authorSlug) {
@@ -65,6 +68,7 @@ const PROFILE_COLS = `p.id,p.slug,p.name,p.headline,p.location,p.bio,p.interests
 
 /** Autores, com quem já publicou primeiro. */
 export async function listProfiles(limit = 100): Promise<PersonCard[]> {
+  if (privateReviewMode()) return [];
   const r = await database()
     .prepare(`SELECT * FROM (SELECT ${PROFILE_COLS},p.created_at AS created FROM profiles p) t ORDER BY (t.posts + t.articles) DESC, t.created DESC LIMIT ${Math.min(limit, 200)}`)
     .all<ProfileRow>();
@@ -72,6 +76,7 @@ export async function listProfiles(limit = 100): Promise<PersonCard[]> {
 }
 
 export async function getProfile(slug: string, uid: string): Promise<PersonFull | null> {
+  if (privateReviewMode()) return null;
   if (!/^[a-z][a-z0-9-]{2,39}$/.test(slug)) return null;
   const r = await database()
     .prepare(`SELECT ${PROFILE_COLS},p.trajectory,(p.owner_id=?) AS isMine FROM profiles p WHERE p.slug=?`)
@@ -112,6 +117,10 @@ export type FeedArticle = {
 
 /** Artigos publicados (revisados pela equipe), opcionalmente só de um autor. */
 export async function listArticles(opts: { authorSlug?: string; limit?: number } = {}): Promise<FeedArticle[]> {
+  if (privateReviewMode()) return opts.authorSlug ? [] : (await listPublishedArticles()).slice(0, opts.limit ?? 100).map((a) => ({
+    slug: a.slug, title: a.title, summary: a.summary, area: a.area, type: a.type,
+    authorName: a.author, authorSlug: null, minutes: Number.parseInt(a.time, 10), publishedAt: a.publishedAt,
+  }));
   const params: unknown[] = ["published"];
   let where = "a.status=?";
   if (opts.authorSlug) {

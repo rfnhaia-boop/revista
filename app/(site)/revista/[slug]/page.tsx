@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import ArticleView from "@/components/site/article-view";
-import { ArticleProgressView, NotAvailableView } from "@/components/site/unavailable";
-import { getPublishedArticle } from "@/lib/articles";
+import { ArticleProgressView } from "@/components/site/unavailable";
+import { getPublishedArticle, listPublishedArticles } from "@/lib/articles";
 import { getCurrentUser } from "@/lib/auth";
 import { database } from "@/lib/storage";
 
@@ -17,7 +18,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           .first<{ id: string; title: string; status: string; reviewNote: string | null }>()
       : null;
     if (mine) return <ArticleProgressView article={{ ...mine, reviewNote: mine.reviewNote ?? "" }} />;
-    return <NotAvailableView signedIn={!!user} />;
+    notFound();
   }
   const base = process.env.APP_ORIGIN || "";
   const jsonLd = {
@@ -35,7 +36,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />
-      <ArticleView article={article} />
+      <ArticleView key={article.slug} article={article} related={(await listPublishedArticles()).filter((a) => a.slug !== slug).slice(0, 2)} />
     </>
   );
 }

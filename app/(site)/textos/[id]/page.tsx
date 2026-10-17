@@ -1,12 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import Markdown from "@/components/editor/markdown";
-import { NotAvailableView } from "@/components/site/unavailable";
 import NotebookConversation from "@/app/notebook-conversation";
 import ThoughtOwnerBar from "@/app/thought-owner-bar";
 import ThoughtShare from "@/app/thought-share";
 import { getCurrentUser } from "@/lib/auth";
 import { database } from "@/lib/storage";
+import { privateReviewMode } from "@/lib/runtime-mode";
+import { notFound } from "next/navigation";
 
 type Row = {
   id: string; title: string; excerpt: string; body: string; format: string; area: string; access: string;
@@ -14,6 +15,7 @@ type Row = {
 };
 
 async function load(id: string, uid: string) {
+  if (privateReviewMode()) return null;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const r = await database()
     .prepare(
@@ -40,7 +42,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   const user = await getCurrentUser();
   const uid = user?.userId || "";
   const r = await load(id, uid);
-  if (!r) return <NotAvailableView signedIn={!!user} />;
+  if (!r) notFound();
   const mine = r.ownerId === uid;
   const locked = r.access === "paid" && !mine;
   const words = r.body.trim().split(/\s+/).length;

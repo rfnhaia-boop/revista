@@ -9,3 +9,17 @@ export const activateSchema = z
   })
   .strict();
 export const loginSchema = z.object({ email, senha: z.string().min(1).max(200) }).strict();
+
+export const inviteRegistrationSchema = z
+  .object({
+    token: z.string().trim().min(20).max(200),
+    name: z.string().trim().min(2).max(100),
+    password: z.string().min(8).max(200),
+    confirmPassword: z.string().min(8).max(200),
+    consent: z.literal(true),
+  })
+  .strict()
+  .refine((value) => value.password === value.confirmPassword, {
+    message: "As senhas não conferem.",
+    path: ["confirmPassword"],
+  });

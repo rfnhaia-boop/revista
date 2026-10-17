@@ -12,6 +12,8 @@ export const inviteSchema = z.discriminatedUnion("action", [
     .object({
       action: z.literal("create"),
       email: z.string().trim().toLowerCase().email().max(200),
+      invitedName: z.string().trim().min(2).max(100),
+      message: z.string().trim().max(500).default(""),
       role: z.enum(["creator", "researcher"]),
     })
     .strict(),

@@ -146,6 +146,8 @@ export const roleRequests = pgTable(
 export const creatorInvitations = pgTable("creator_invitations", {
   id: text("id").primaryKey(),
   email: text("email").notNull(),
+  invitedName: text("invited_name").notNull().default(""),
+  message: text("message").notNull().default(""),
   tokenHash: text("token_hash").notNull().unique(),
   role: text("role").notNull(),
   status: text("status").notNull().default("open"),
