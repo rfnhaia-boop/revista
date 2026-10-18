@@ -1,6 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { audit, json, readBody, requireStaffApi } from "@/lib/admin";
 import { inviteSchema } from "@/lib/admin-validation";
+import { mailCompany, sendMail } from "@/lib/mailer";
+import { inviteMail } from "@/lib/mail-templates";
 import { database } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +48,18 @@ export async function POST(request: Request) {
     )
     .run();
   await audit(me.userId, id, "invite.created");
-  // O codigo so aparece agora; no banco fica apenas o hash.
-  return json({ saved: true, id, token }, 201);
+  // O link por e-mail é o caminho normal; o código também volta aqui (só agora: no banco fica apenas o hash).
+  const origin = (process.env.APP_ORIGIN || new URL(request.url).origin).replace(/\/$/, "");
+  const emailed = await sendMail(
+    body.email,
+    "invite",
+    inviteMail(mailCompany(), {
+      name: body.invitedName,
+      role: body.role === "creator" ? "criador" : "pesquisador",
+      message: body.message,
+      link: `${origin}/convite/${token}`,
+      expiresAt: new Date(now.getTime() + 14 * 86400000).toISOString(),
+    }),
+  );
+  return json({ saved: true, id, token, emailed }, 201);
 }

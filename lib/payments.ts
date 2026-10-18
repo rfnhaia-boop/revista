@@ -1,5 +1,7 @@
 import { database } from "@/lib/storage";
 import { commissionPercent } from "@/lib/checkout-validation";
+import { mailCompany, sendMail } from "@/lib/mailer";
+import { receiptMail } from "@/lib/mail-templates";
 import { effectOf, SUBSCRIPTION_GRACE_DAYS, type AsaasWebhook } from "@/lib/payments-core";
 
 export { asaasWebhookSchema, effectOf, tokenMatches, SUBSCRIPTION_GRACE_DAYS, type AsaasWebhook, type PaymentEffect } from "@/lib/payments-core";
@@ -90,6 +92,7 @@ export async function applyWebhook(evt: AsaasWebhook, now = new Date()): Promise
       statements.push(db.prepare("UPDATE subscriptions SET status='active',current_period_end=?,updated_at=? WHERE id=? AND status<>'canceled'").bind(endsAt, stamp, payment.subscriptionId));
     statements.push(done);
     await db.batch(statements);
+    void sendReceipt(payment.id, stamp).catch(() => {});
   } else if (effect === "refunded") {
     await db.batch([
       db.prepare("UPDATE payments SET status='refunded',updated_at=? WHERE id=?").bind(stamp, payment.id),
@@ -111,4 +114,37 @@ export async function hasAccess(readerOwnerId: string, creatorOwnerId: string, n
     .bind(readerOwnerId, creatorOwnerId, now.toISOString(), notebookId)
     .first<{ id: string }>();
   return !!row;
+}
+
+/** Recibo por e-mail, uma vez por pagamento. Se o envio falhar, libera para tentar no próximo evento. */
+async function sendReceipt(paymentId: string, paidAt: string) {
+  const db = database();
+  const claimed = await db.prepare("UPDATE payments SET receipt_sent_at=? WHERE id=? AND receipt_sent_at IS NULL RETURNING id").bind(paidAt, paymentId).first();
+  if (!claimed) return;
+  const r = await db
+    .prepare(
+      `SELECT p.kind,p.amount_cents AS cents,p.notebook_id AS notebookId,u.email,u.name,COALESCE(c.name,'o criador') AS creator,c.slug AS creatorSlug,n.title,
+         (SELECT pl.name FROM subscriptions s JOIN plans pl ON pl.id=s.plan_id WHERE s.id=p.subscription_id) AS planName
+       FROM payments p JOIN users u ON u.id=p.payer_owner_id LEFT JOIN profiles c ON c.owner_id=p.creator_owner_id LEFT JOIN notebooks n ON n.id=p.notebook_id WHERE p.id=?`,
+    )
+    .bind(paymentId)
+    .first<{ kind: string; cents: number; notebookId: string | null; email: string; name: string; creator: string; creatorSlug: string | null; title: string | null; planName: string | null }>();
+  if (!r) return;
+  const origin = (process.env.APP_ORIGIN || "").replace(/\/$/, "");
+  const kind = r.kind === "subscription" ? "subscription" : "single";
+  const ok = await sendMail(
+    r.email,
+    "receipt",
+    receiptMail(mailCompany(), {
+      name: r.name,
+      item: kind === "subscription" ? r.planName ?? "Assinatura" : r.title ?? "Texto",
+      creator: r.creator,
+      kind,
+      cents: r.cents,
+      paidAt,
+      paymentRef: paymentId.slice(0, 8).toUpperCase(),
+      accessLink: kind === "single" && r.notebookId ? `${origin}/textos/${r.notebookId}` : `${origin}/${r.creatorSlug ? "pessoas/" + r.creatorSlug : "explorar"}`,
+    }),
+  );
+  if (!ok) await db.prepare("UPDATE payments SET receipt_sent_at=NULL WHERE id=?").bind(paymentId).run();
 }

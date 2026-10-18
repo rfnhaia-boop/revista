@@ -335,6 +335,7 @@ export const payments = pgTable(
     amountCents: integer("amount_cents").notNull(),
     commissionCents: integer("commission_cents").notNull().default(0),
     status: text("status").notNull().default("pending"),
+    receiptSentAt: text("receipt_sent_at"),
     createdAt: text("created_at").notNull(),
     updatedAt: text("updated_at").notNull(),
   },
@@ -439,4 +440,24 @@ export const bookProgress = pgTable("book_progress", {
   chapter: integer("chapter").notNull(),
   paragraph: integer("paragraph").notNull(),
   updatedAt: text("updated_at").notNull(),
+});
+
+export const passwordResets = pgTable(
+  "password_resets",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    userId: text("user_id").notNull(),
+    expiresAt: text("expires_at").notNull(),
+    usedAt: text("used_at"),
+    createdAt: text("created_at").notNull(),
+  },
+  (t) => [index("password_resets_user").on(t.userId)],
+);
+export const emailLog = pgTable("email_log", {
+  id: text("id").primaryKey(),
+  toEmail: text("to_email").notNull(),
+  template: text("template").notNull(),
+  status: text("status").notNull(),
+  error: text("error").notNull().default(""),
+  createdAt: text("created_at").notNull(),
 });

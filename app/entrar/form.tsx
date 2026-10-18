@@ -3,18 +3,20 @@ import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 
-async function post(url: string, body: unknown) {
+async function post(url: string, body: unknown): Promise<{ message?: string }> {
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  const data = (await res.json().catch(() => ({}))) as { error?: string };
+  const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
   if (!res.ok) throw new Error(data.error || "Não foi possível continuar.");
+  return data;
 }
 
 export default function EntrarForm({ returnTo }: { returnTo: string }) {
-  const [mode, setMode] = useState<"login" | "ativar">("login");
+  const [mode, setMode] = useState<"login" | "ativar" | "forgot">("login");
+  const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [show, setShow] = useState(false);
@@ -25,6 +27,12 @@ export default function EntrarForm({ returnTo }: { returnTo: string }) {
     setBusy(true);
     setError("");
     try {
+      if (mode === "forgot") {
+        const r = await post("/api/auth/forgot", { email: String(f.get("email")) });
+        setNotice(r.message || "Se o e-mail estiver cadastrado, enviamos um link.");
+        setBusy(false);
+        return;
+      }
       if (mode === "login")
         await post("/api/auth/login", { email: String(f.get("email")), senha: String(f.get("senha")) });
       else await post("/api/auth/ativar", { email: String(f.get("email")), codigo: String(f.get("codigo")), terms: f.get("terms") === "on" });
@@ -35,9 +43,10 @@ export default function EntrarForm({ returnTo }: { returnTo: string }) {
     }
   }
 
-  function switchTo(next: "login" | "ativar") {
+  function switchTo(next: "login" | "ativar" | "forgot") {
     setMode(next);
     setError("");
+    setNotice("");
   }
 
   return (
@@ -62,16 +71,18 @@ export default function EntrarForm({ returnTo }: { returnTo: string }) {
         </Link>
 
         <div className="auth-box">
-          {mode === "ativar" && (
+          {mode !== "login" && (
             <button type="button" className="auth-back" onClick={() => switchTo("login")}>
               <ArrowLeft size={15} /> Voltar para entrar
             </button>
           )}
-          <h1>{mode === "login" ? "Entrar" : "Primeiro acesso"}</h1>
+          <h1>{mode === "login" ? "Entrar" : mode === "forgot" ? "Nova senha" : "Primeiro acesso"}</h1>
           <p className="auth-lead">
             {mode === "login"
               ? "Use o e-mail e a senha do seu cadastro NEW."
-              : "Informe o e-mail do seu cadastro e o código de ativação que você recebeu."}
+              : mode === "forgot"
+                ? "Informe o e-mail da sua conta e enviamos um link para criar uma nova senha."
+                : "Informe o e-mail do seu cadastro e o código de ativação que você recebeu."}
           </p>
 
           <form onSubmit={submit} key={mode} className="auth-form">
@@ -80,7 +91,7 @@ export default function EntrarForm({ returnTo }: { returnTo: string }) {
               <input name="email" type="email" required autoFocus autoComplete="email" maxLength={200} placeholder="voce@exemplo.com" />
             </label>
 
-            {mode === "login" ? (
+            {mode === "forgot" ? null : mode === "login" ? (
               <label className="auth-field">
                 <span>Senha</span>
                 <div className="auth-pass">
@@ -104,6 +115,12 @@ export default function EntrarForm({ returnTo }: { returnTo: string }) {
               </label>
             )}
 
+            {notice && (
+              <p role="status" className="auth-notice">
+                {notice}
+              </p>
+            )}
+
             {error && (
               <p role="alert" className="auth-error">
                 {error}
@@ -111,12 +128,16 @@ export default function EntrarForm({ returnTo }: { returnTo: string }) {
             )}
 
             <button className="auth-submit" disabled={busy}>
-              {busy ? "Aguarde…" : mode === "login" ? "Entrar" : "Ativar minha conta"}
+              {busy ? "Aguarde…" : mode === "login" ? "Entrar" : mode === "forgot" ? "Enviar link" : "Ativar minha conta"}
             </button>
           </form>
 
           {mode === "login" && (
             <p className="auth-alt">
+              <button type="button" onClick={() => switchTo("forgot")}>
+                Esqueci minha senha
+              </button>
+              {" · "}
               Primeiro acesso?{" "}
               <button type="button" onClick={() => switchTo("ativar")}>
                 Ative com seu código

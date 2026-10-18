@@ -26,9 +26,11 @@ export default function InvitesPanel() {
     setBusy(true);
     try {
       const email = String(f.get("email"));
-      const r = await send<{ token: string }>("/api/admin/invites", { action: "create", email, invitedName: String(f.get("invitedName")), message: String(f.get("message")), role: String(f.get("role")) });
+      const r = await send<{ token: string; emailed?: boolean }>("/api/admin/invites", { action: "create", email, invitedName: String(f.get("invitedName")), message: String(f.get("message")), role: String(f.get("role")) });
       const origin = window.location.origin;
       setToken({ email, value: `${origin}/convite/${r.token}` });
+      if (r.emailed) toast.success(`Convite enviado por e-mail para ${email}.`);
+      else toast.warning("O e-mail não foi enviado. Copie o link abaixo e envie você mesmo.");
       form.reset();
       await reload();
     } catch (err) {

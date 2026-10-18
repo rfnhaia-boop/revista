@@ -24,3 +24,14 @@ export const inviteRegistrationSchema = z
     message: "As senhas não conferem.",
     path: ["confirmPassword"],
   });
+
+export const forgotSchema = z.object({ email }).strict();
+
+export const resetSchema = z
+  .object({
+    token: z.string().trim().min(20).max(200),
+    password: z.string().min(8).max(200),
+    confirmPassword: z.string().min(8).max(200),
+  })
+  .strict()
+  .refine((v) => v.password === v.confirmPassword, { message: "As senhas não conferem.", path: ["confirmPassword"] });
