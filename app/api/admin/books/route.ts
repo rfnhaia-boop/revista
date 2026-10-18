@@ -16,7 +16,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const me = await requireStaffApi(true);
   if (me instanceof Response) return me;
-  const body = await readBody(request, bookActionSchema);
+  // Um livro inteiro passa de 100 KB: limite maior só aqui (o schema também limita o texto a 3 milhões de caracteres).
+  const body = await readBody(request, bookActionSchema, 3_200_000);
   if (body instanceof Response) return body;
   try {
     if (body.action === "create") {

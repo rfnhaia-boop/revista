@@ -49,7 +49,7 @@ import type { ZodTypeAny, z } from "zod";
 import { validOrigin } from "@/lib/validation";
 
 /** Valida origem + JSON (limite 100 KB) + schema. Retorna dados ou uma Response de erro. */
-export async function readBody<S extends ZodTypeAny>(request: Request, schema: S): Promise<z.infer<S> | Response> {
+export async function readBody<S extends ZodTypeAny>(request: Request, schema: S, maxChars = 100_000): Promise<z.infer<S> | Response> {
   if (!validOrigin(request)) return json({ error: "Origem inválida." }, 403);
   let raw = "";
   try {
@@ -57,7 +57,7 @@ export async function readBody<S extends ZodTypeAny>(request: Request, schema: S
   } catch {
     return json({ error: "Dados inválidos." }, 400);
   }
-  if (raw.length > 100_000) return json({ error: "Conteúdo muito grande." }, 413);
+  if (raw.length > maxChars) return json({ error: "Conteúdo muito grande." }, 413);
   try {
     const parsed = schema.safeParse(JSON.parse(raw));
     if (!parsed.success) return json({ error: "Revise os campos informados." }, 400);
