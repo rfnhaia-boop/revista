@@ -1,8 +1,10 @@
 "use client";
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function ResetForm({ token }: { token: string }) {
+  const router = useRouter();
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -22,7 +24,7 @@ export default function ResetForm({ token }: { token: string }) {
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) throw new Error(data.error || "Não foi possível redefinir.");
       setDone(true);
-      setTimeout(() => (window.location.href = "/entrar"), 2500);
+      setTimeout(() => router.push("/entrar"), 2500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Falha ao redefinir.");
       setBusy(false);
