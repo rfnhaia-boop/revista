@@ -72,3 +72,9 @@ export const articleReviewSchema = z
 export const thoughtModerationSchema = z
   .object({ id, hidden: z.boolean(), note })
   .strict();
+
+export const paymentsActionSchema = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("refund"), paymentId: id, note }).strict(),
+  z.object({ action: z.literal("block-creator"), ownerId: z.string().min(1).max(100), reason: z.string().trim().min(5).max(500), cancelSubscriptions: z.boolean() }).strict(),
+  z.object({ action: z.literal("unblock-creator"), ownerId: z.string().min(1).max(100) }).strict(),
+]);

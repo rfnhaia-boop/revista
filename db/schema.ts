@@ -379,3 +379,9 @@ export const termsAcceptances = pgTable(
   },
   (t) => [index("terms_acceptances_owner").on(t.ownerId, t.version)],
 );
+export const creatorBlocks = pgTable("creator_blocks", {
+  ownerId: text("owner_id").primaryKey(),
+  reason: text("reason").notNull().default(""),
+  blockedBy: text("blocked_by").notNull(),
+  blockedAt: text("blocked_at").notNull(),
+});

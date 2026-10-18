@@ -91,3 +91,6 @@ export async function firstSubscriptionPaymentId(subscriptionId: string) {
 }
 
 export const cancelSubscription = (subscriptionId: string) => asaasRequest<unknown>(`/subscriptions/${encodeURIComponent(subscriptionId)}`, { method: "DELETE" });
+
+/** Estorna o valor total no provedor (o dinheiro volta ao pagador; o split ao criador é desfeito lá). */
+export const refundPayment = (paymentId: string) => asaasRequest<unknown>(`/payments/${encodeURIComponent(paymentId)}/refund`, { method: "POST", body: {} });

@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, ClipboardCheck, FileQuestion, Inbox, KeyRound, LayoutDashboard, MessageSquareText, ShieldCheck, Users } from "lucide-react";
+import { BookOpen, ClipboardCheck, CreditCard, FileQuestion, Inbox, KeyRound, LayoutDashboard, MessageSquareText, ShieldCheck, Users } from "lucide-react";
 
 const items = [
   { href: "/admin", label: "Visão geral", icon: LayoutDashboard, adminOnly: false },
@@ -12,6 +12,7 @@ const items = [
   { href: "/admin/perguntas", label: "Perguntas", icon: FileQuestion, adminOnly: false },
   { href: "/admin/acessos", label: "Pedidos de acesso", icon: ShieldCheck, adminOnly: true },
   { href: "/admin/convites", label: "Convites", icon: KeyRound, adminOnly: true },
+  { href: "/admin/pagamentos", label: "Pagamentos", icon: CreditCard, adminOnly: true },
   { href: "/admin/usuarios", label: "Usuários", icon: Users, adminOnly: true },
 ];
 

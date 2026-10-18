@@ -1,4 +1,5 @@
 import { AsaasError, cancelSubscription, createCustomer, createPixCharge, createSubscription, firstSubscriptionPaymentId, getPixQr, type PixQr } from "@/lib/asaas";
+import { isCreatorBlocked } from "@/lib/admin-payments";
 import { commissionPercent, splitOf } from "@/lib/checkout-validation";
 import { database } from "@/lib/storage";
 
@@ -27,6 +28,7 @@ async function customerFor(buyer: Buyer, cpfCnpj: string) {
 }
 
 async function creatorWallet(creatorOwnerId: string) {
+  if (await isCreatorBlocked(creatorOwnerId)) throw new CheckoutError(409, "Este criador está indisponível no momento.");
   const w = await database().prepare("SELECT wallet_id AS walletId,status FROM payout_accounts WHERE owner_id=?").bind(creatorOwnerId).first<{ walletId: string; status: string }>();
   if (!w || !w.walletId || w.status === "creating" || w.status === "rejected") throw new CheckoutError(409, "Este criador ainda não pode receber pagamentos.");
   return w.walletId;

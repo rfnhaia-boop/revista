@@ -106,3 +106,5 @@ textarea, .adm-main input, .adm-main select { font: inherit; }
 .adm-article-preview { max-height: 520px; overflow: auto; padding: 22px 26px; border: 1px solid #ffffff14; border-radius: 12px; background: #00000033; font-size: 17px; line-height: 1.75; font-family: Georgia, serif; }
 .adm-article-preview p { margin: 0 0 1.1em; white-space: normal; }
 .adm-invite-message{grid-column:1/-1}.adm-invite-message textarea{width:100%;resize:vertical;min-height:82px}.adm-invite-message small{color:#887995;font-weight:400}.adm-token code{word-break:break-all}
+
+.adm-sub { font-size: 18px; margin: 28px 0 12px; font-weight: 500; }

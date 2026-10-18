@@ -23,6 +23,7 @@ createServer((req, res) => {
     if (req.method === "POST" && req.url === "/payments") { log.push({ route: "payments", ...b }); return send(200, { id: `pay_mock_${++seq}` }); }
     if (req.method === "POST" && req.url === "/subscriptions") { log.push({ route: "subscriptions", ...b }); const id = `sub_mock_${++seq}`; return send(200, { id, firstPayment: `pay_${id}_1` }); }
     let m;
+    if (req.method === "POST" && (m = req.url.match(/^\/payments\/([^/]+)\/refund$/))) { log.push({ route: "refund", id: m[1] }); if (m[1] === "pay_recusa") return send(400, { errors: [{ description: "Saldo insuficiente para estorno." }] }); return send(200, { id: m[1], status: "REFUNDED" }); }
     if (req.method === "GET" && (m = req.url.match(/^\/payments\/([^/]+)\/pixQrCode$/))) return send(200, { encodedImage: PNG, payload: "00020126mock" + m[1], expirationDate: "2099-01-01" });
     if (req.method === "GET" && (m = req.url.match(/^\/subscriptions\/([^/]+)\/payments$/))) return send(200, { data: [{ id: `pay_${m[1]}_1` }] });
     if (req.method === "DELETE" && (m = req.url.match(/^\/subscriptions\/([^/]+)$/))) { log.push({ route: "cancel", id: m[1] }); return send(200, { deleted: true }); }

@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
+import { isCreatorBlocked } from "@/lib/admin-payments";
 import { database } from "@/lib/storage";
 import { validOrigin } from "@/lib/validation";
 import { communitySchema } from "@/lib/community-validation";
@@ -120,6 +121,7 @@ export async function POST(request: Request) {
         const payout = await db.prepare("SELECT status FROM payout_accounts WHERE owner_id=?").bind(uid).first<{ status: string }>();
         if (!payout || payout.status === "creating" || payout.status === "rejected")
           return json({ error: "Abra sua conta de recebimento (aba Receber) antes de publicar conteúdo pago." }, 409);
+        if (await isCreatorBlocked(uid)) return json({ error: "Suas vendas estão suspensas. Fale com a equipe." }, 403);
       }
       const author = await db
         .prepare("SELECT id FROM profiles WHERE owner_id=?")

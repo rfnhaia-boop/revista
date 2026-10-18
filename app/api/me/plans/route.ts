@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
+import { isCreatorBlocked } from "@/lib/admin-payments";
 import { moneyEnabled } from "@/lib/features";
 import { planSchema, planToggleSchema } from "@/lib/payout-validation";
 import { database } from "@/lib/storage";
@@ -27,6 +28,7 @@ export async function POST(request: Request) {
   if (!user) return json({ error: "Entre na sua conta para continuar." }, 401);
   if (!moneyEnabled()) return json({ error: "Planos pagos ainda não estão habilitados." }, 503);
   if (!canSell(user.role)) return json({ error: "Só criadores aprovados podem criar planos." }, 403);
+  if (await isCreatorBlocked(user.userId)) return json({ error: "Suas vendas estão suspensas. Fale com a equipe." }, 403);
   const parsed = planSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return json({ error: "Nome de 3 a 60 caracteres e valor entre R$ 5 e R$ 1.000." }, 400);
 
@@ -52,6 +54,7 @@ export async function PATCH(request: Request) {
   if (!moneyEnabled()) return json({ error: "Planos pagos ainda não estão habilitados." }, 503);
   const parsed = planToggleSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return json({ error: "Pedido inválido." }, 400);
+  if (parsed.data.active && (await isCreatorBlocked(user.userId))) return json({ error: "Suas vendas estão suspensas. Fale com a equipe." }, 403);
   const row = await database()
     .prepare("UPDATE plans SET active=? WHERE id=? AND owner_id=? RETURNING id")
     .bind(parsed.data.active ? 1 : 0, parsed.data.id, user.userId)
