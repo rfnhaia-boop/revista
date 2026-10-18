@@ -14,7 +14,7 @@ export function Avatar({ name, size = 36 }: { name: string; size?: number }) {
 }
 
 /** Cartão de um pensamento no feed. O cartão inteiro é clicável; salvar e o autor ficam acima do link. */
-export default function ThoughtCard({ post, saved, signedIn, showAuthor = true }: { post: FeedPost; saved: boolean; signedIn: boolean; showAuthor?: boolean }) {
+export default function ThoughtCard({ post, saved, signedIn, showAuthor = true, unlocked = false }: { post: FeedPost; saved: boolean; signedIn: boolean; showAuthor?: boolean; unlocked?: boolean }) {
   return (
     <article className="cm-card">
       <div className="cm-card-top">
@@ -31,7 +31,14 @@ export default function ThoughtCard({ post, saved, signedIn, showAuthor = true }
         )}
         <BookmarkButton postId={post.id} saved={saved} signedIn={signedIn} />
       </div>
-      <div className="cm-kicker">{post.format} · {post.area}</div>
+      <div className="cm-kicker">
+        {post.format} · {post.area}
+        {post.access === "paid" && (
+          <span className={unlocked ? "cm-pill cm-pill-on" : "cm-pill"}>
+            {unlocked ? "Liberado para você" : `Pago · ${(post.priceCents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`}
+          </span>
+        )}
+      </div>
       <h3>
         <Link href={`/textos/${post.id}`} className="cm-stretch">{post.title}</Link>
       </h3>

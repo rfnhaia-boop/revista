@@ -15,6 +15,8 @@ export type FeedPost = {
   likes: number;
   replies: number;
   minutes: number;
+  access: "free" | "paid";
+  priceCents: number;
 };
 
 export type PersonCard = {
@@ -48,7 +50,7 @@ export async function listFeed(opts: { authorSlug?: string; limit?: number } = {
   }
   const r = await database()
     .prepare(
-      `SELECT n.id,n.title,n.excerpt,n.format,n.area,n.created_at AS createdAt,n.profile_id AS profileId,p.name AS authorName,p.slug AS authorSlug,
+      `SELECT n.id,n.title,n.excerpt,n.format,n.area,n.access,n.price_cents AS priceCents,n.created_at AS createdAt,n.profile_id AS profileId,p.name AS authorName,p.slug AS authorSlug,
         (SELECT COUNT(*)::int FROM notebook_reactions x WHERE x.post_id=n.id) AS likes,
         (SELECT COUNT(*)::int FROM notebook_replies r WHERE r.post_id=n.id AND r.status='visible' AND r.owner_id<>n.owner_id) AS replies,
         length(n.body)::int AS chars
@@ -85,15 +87,26 @@ export async function getProfile(slug: string, uid: string): Promise<PersonFull 
   return r ? { ...r, interests: splitInterests(r.interests) } : null;
 }
 
-/** Perfis que a pessoa segue e textos que ela salvou. */
-export async function userRelations(uid: string): Promise<{ following: string[]; bookmarks: string[] }> {
-  if (!uid) return { following: [], bookmarks: [] };
+/** Perfis que a pessoa segue e assina, textos que ela salvou e textos pagos que ela comprou. */
+export async function userRelations(uid: string): Promise<{ following: string[]; bookmarks: string[]; subscribed: string[]; purchased: string[] }> {
+  if (!uid) return { following: [], bookmarks: [], subscribed: [], purchased: [] };
   const db = database();
-  const [f, b] = await Promise.all([
+  const now = new Date().toISOString();
+  const [f, b, s, p] = await Promise.all([
     db.prepare("SELECT profile_id AS id FROM follows WHERE owner_id=?").bind(uid).all<{ id: string }>(),
     db.prepare("SELECT post_id AS id FROM bookmarks WHERE owner_id=?").bind(uid).all<{ id: string }>(),
+    db
+      .prepare("SELECT DISTINCT p.id FROM entitlements e JOIN profiles p ON p.owner_id=e.creator_owner_id WHERE e.reader_owner_id=? AND e.kind='subscription' AND e.status='active' AND (e.ends_at IS NULL OR e.ends_at>?)")
+      .bind(uid, now)
+      .all<{ id: string }>()
+      .catch(() => ({ results: [] as { id: string }[] })),
+    db
+      .prepare("SELECT notebook_id AS id FROM entitlements WHERE reader_owner_id=? AND kind='single' AND status='active' AND notebook_id IS NOT NULL")
+      .bind(uid)
+      .all<{ id: string }>()
+      .catch(() => ({ results: [] as { id: string }[] })),
   ]);
-  return { following: f.results.map((x) => x.id), bookmarks: b.results.map((x) => x.id) };
+  return { following: f.results.map((x) => x.id), bookmarks: b.results.map((x) => x.id), subscribed: s.results.map((x) => x.id), purchased: p.results.map((x) => x.id) };
 }
 
 /** Id do perfil da própria pessoa (ou string vazia). */

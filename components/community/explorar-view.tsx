@@ -2,14 +2,15 @@
 import "./comunidade.css";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Bookmark, Feather, Plus, Search, Users } from "lucide-react";
+import { Bookmark, Feather, Plus, Search, Sparkles, Users } from "lucide-react";
 import type { FeedArticle, FeedPost, PersonCard } from "@/lib/community-data";
+import { forYou, unlockedFor } from "@/lib/feed";
 import ThoughtCard, { Avatar } from "./thought-card";
 import ArticleCard from "./article-card";
 import { FollowButton } from "./relation-buttons";
 
 const TOPICS = ["Todos", "Psicologia", "Tecnologia", "Educação", "Sociedade", "Filosofia", "Negócios", "Literatura"];
-type Tab = "recentes" | "seguindo" | "salvos";
+type Tab = "paravoce" | "recentes" | "seguindo" | "salvos";
 type Kind = "tudo" | "artigos" | "pensamentos";
 type Item = { k: "p"; date: string; post: FeedPost } | { k: "a"; date: string; article: FeedArticle };
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -20,6 +21,8 @@ export default function ExplorarView({
   authors,
   following,
   bookmarks,
+  subscribed,
+  purchased,
   signedIn,
   myId,
 }: {
@@ -28,15 +31,20 @@ export default function ExplorarView({
   authors: PersonCard[];
   following: string[];
   bookmarks: string[];
+  subscribed: string[];
+  purchased: string[];
   signedIn: boolean;
   myId: string;
 }) {
-  const [tab, setTab] = useState<Tab>("recentes");
+  const [tab, setTab] = useState<Tab>(signedIn ? "paravoce" : "recentes");
   const [kind, setKind] = useState<Kind>("tudo");
   const [topic, setTopic] = useState("Todos");
   const [q, setQ] = useState("");
   const followSet = useMemo(() => new Set(following), [following]);
   const saveSet = useMemo(() => new Set(bookmarks), [bookmarks]);
+  const subSet = useMemo(() => new Set(subscribed), [subscribed]);
+  const buySet = useMemo(() => new Set(purchased), [purchased]);
+  const profileBySlug = useMemo(() => new Map(authors.map((a) => [a.slug, a.id])), [authors]);
   const followedSlugs = useMemo(() => new Set(authors.filter((a) => followSet.has(a.id)).map((a) => a.slug)), [authors, followSet]);
 
   const items = useMemo(() => {
@@ -58,12 +66,20 @@ export default function ExplorarView({
         if (nq && !norm(`${a.title} ${a.summary} ${a.authorName} ${a.type}`).includes(nq)) continue;
         out.push({ k: "a", date: a.publishedAt, article: a });
       }
+    if (tab === "paravoce") {
+      const entries = out.map((it) =>
+        it.k === "p"
+          ? { it, id: it.post.id, date: it.date, profileId: it.post.profileId, paid: it.post.access === "paid" }
+          : { it, id: "a:" + it.article.slug, date: it.date, profileId: (it.article.authorSlug && profileBySlug.get(it.article.authorSlug)) || null, paid: false },
+      );
+      return forYou(entries, { subscribed: subSet, following: followSet, purchased: buySet }).map((e) => e.it);
+    }
     return out.sort((x, y) => Date.parse(y.date) - Date.parse(x.date));
-  }, [posts, articles, tab, kind, topic, q, followSet, saveSet, followedSlugs]);
+  }, [posts, articles, tab, kind, topic, q, followSet, saveSet, followedSlugs, subSet, buySet, profileBySlug]);
 
   const suggested = authors.filter((a) => a.posts + a.articles > 0 && a.id !== myId && !followSet.has(a.id)).slice(0, 5);
   const filtering = !!q.trim() || topic !== "Todos" || kind !== "tudo";
-  const needLogin = !signedIn && tab !== "recentes";
+  const needLogin = !signedIn && tab !== "recentes" && tab !== "paravoce";
 
   let title = "Ainda não há publicações.";
   let text = "Seja a primeira pessoa a publicar.";
@@ -73,6 +89,9 @@ export default function ExplorarView({
   } else if (filtering) {
     title = "Nada encontrado com esses filtros.";
     text = "Tente outra palavra ou escolha outro tema.";
+  } else if (tab === "paravoce") {
+    title = "Seu feed ainda está vazio.";
+    text = "Siga autores ou assine um Caderno para ver aqui o que eles publicam, junto com os textos abertos da comunidade.";
   } else if (tab === "seguindo") {
     title = "Você ainda não segue ninguém.";
     text = "Siga autores para acompanhar o que eles publicam.";
@@ -112,7 +131,7 @@ export default function ExplorarView({
         <section>
           <div className="cm-subbar">
             <nav className="cm-tabs" role="tablist" aria-label="Feed">
-              {([["recentes", "Recentes"], ["seguindo", "Seguindo"], ["salvos", "Salvos"]] as [Tab, string][]).map(([k, l]) => (
+              {([...(signedIn ? [["paravoce", "Para você"]] : []), ["recentes", "Recentes"], ["seguindo", "Seguindo"], ["salvos", "Salvos"]] as [Tab, string][]).map(([k, l]) => (
                 <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setTab(k)}>{l}</button>
               ))}
             </nav>
@@ -125,7 +144,7 @@ export default function ExplorarView({
 
           {needLogin || items.length === 0 ? (
             <div className="cm-empty">
-              {tab === "salvos" ? <Bookmark size={30} /> : tab === "seguindo" ? <Users size={30} /> : <Feather size={30} />}
+              {tab === "salvos" ? <Bookmark size={30} /> : tab === "seguindo" ? <Users size={30} /> : tab === "paravoce" ? <Sparkles size={30} /> : <Feather size={30} />}
               <h3>{title}</h3>
               <p>{text}</p>
               {needLogin ? (
@@ -142,7 +161,7 @@ export default function ExplorarView({
             <div className="cm-feed">
               {items.map((it) =>
                 it.k === "p" ? (
-                  <ThoughtCard key={"p" + it.post.id} post={it.post} saved={saveSet.has(it.post.id)} signedIn={signedIn} />
+                  <ThoughtCard key={"p" + it.post.id} post={it.post} saved={saveSet.has(it.post.id)} signedIn={signedIn} unlocked={unlockedFor({ id: it.post.id, profileId: it.post.profileId }, { subscribed: subSet, purchased: buySet })} />
                 ) : (
                   <ArticleCard key={"a" + it.article.slug} article={it.article} />
                 ),
