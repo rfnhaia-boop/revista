@@ -2,13 +2,17 @@ import { BookOpen, Plus } from "lucide-react";
 import PageHead from "@/components/site/page-head";
 import { OpenFormButton, SubmissionsList } from "@/components/site/submissions";
 import BookClub from "@/components/site/book-club";
+import Link from "next/link";
+import { listPublishedBooks } from "@/lib/books";
+import { LICENSE_LABEL } from "@/lib/books-core";
 
 export const metadata = {
   title: "Livros · Revista NEW",
   description: "Obras, ensaios e pesquisas de maior fôlego também têm espaço na NEW.",
 };
 
-export default function Page() {
+export default async function Page() {
+  const books = await listPublishedBooks();
   return (
     <>
       <PageHead
@@ -22,6 +26,21 @@ export default function Page() {
         }
       />
       <BookClub />
+      {books.length > 0 && (
+        <section aria-label="Biblioteca">
+          <div className="eyebrow">NA BIBLIOTECA</div>
+          <div className="book-shelf">
+            {books.map((b) => (
+              <Link key={b.id} href={`/livros/${b.slug}`} className="glass">
+                <small>{b.author.toUpperCase()} · {LICENSE_LABEL[b.license].toUpperCase()}</small>
+                <h3>{b.title}</h3>
+                {b.description && <p>{b.description}</p>}
+                <small>{b.chapters} {b.chapters === 1 ? "capítulo" : "capítulos"}</small>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
       <div className="book-intro glass">
         <div className="book-typography">
           <span>NEW · LIVROS</span>

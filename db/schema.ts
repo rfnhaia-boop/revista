@@ -385,3 +385,58 @@ export const creatorBlocks = pgTable("creator_blocks", {
   blockedBy: text("blocked_by").notNull(),
   blockedAt: text("blocked_at").notNull(),
 });
+
+export const books = pgTable("books", {
+  id: text("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  author: text("author").notNull(),
+  year: integer("year"),
+  description: text("description").notNull().default(""),
+  license: text("license").notNull(),
+  licenseNote: text("license_note").notNull().default(""),
+  status: text("status").notNull().default("draft"),
+  createdBy: text("created_by").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+export const bookChapters = pgTable(
+  "book_chapters",
+  {
+    id: text("id").primaryKey(),
+    bookId: text("book_id").notNull(),
+    position: integer("position").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+  },
+  (t) => [uniqueIndex("book_chapters_pos").on(t.bookId, t.position)],
+);
+export const bookNotes = pgTable(
+  "book_notes",
+  {
+    id: text("id").primaryKey(),
+    ownerId: text("owner_id").notNull(),
+    bookId: text("book_id").notNull(),
+    chapter: integer("chapter").notNull(),
+    paragraph: integer("paragraph").notNull(),
+    quote: text("quote").notNull(),
+    body: text("body").notNull(),
+    tag: text("tag").notNull().default(""),
+    createdAt: text("created_at").notNull(),
+  },
+  (t) => [index("book_notes_owner_book").on(t.ownerId, t.bookId)],
+);
+export const bookMarks = pgTable("book_marks", {
+  ownerId: text("owner_id").notNull(),
+  bookId: text("book_id").notNull(),
+  chapter: integer("chapter").notNull(),
+  paragraph: integer("paragraph").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+export const bookProgress = pgTable("book_progress", {
+  ownerId: text("owner_id").notNull(),
+  bookId: text("book_id").notNull(),
+  chapter: integer("chapter").notNull(),
+  paragraph: integer("paragraph").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
